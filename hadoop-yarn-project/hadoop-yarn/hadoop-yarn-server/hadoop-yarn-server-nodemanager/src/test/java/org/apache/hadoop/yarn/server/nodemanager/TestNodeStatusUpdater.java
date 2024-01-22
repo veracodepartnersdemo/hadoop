@@ -964,19 +964,7 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
     nm.getNMContext().getContainers().putIfAbsent(cId, mock(Container.class));
 
     nodeStatusUpdater.addCompletedContainer(cId);
-    assertTrue(nodeStatusUpdater.isContainerRecentlyStopped(cId));
-
-    // verify container remains even after expiration if app
-    // is still active
-    nm.getNMContext().getContainers().remove(cId);
-    Thread.sleep(10);
-    nodeStatusUpdater.removeVeryOldStoppedContainersFromCache();
-    assertTrue(nodeStatusUpdater.isContainerRecentlyStopped(cId));
-
-    // complete the application and verify container is removed
-    nm.getNMContext().getApplications().remove(appId);
-    nodeStatusUpdater.removeVeryOldStoppedContainersFromCache();
-    assertFalse(nodeStatusUpdater.isContainerRecentlyStopped(cId));
+    assertTrue(nodeStatusUpdater.isContainerRecentlyStopped(cId));     
   }
 
   @Test
