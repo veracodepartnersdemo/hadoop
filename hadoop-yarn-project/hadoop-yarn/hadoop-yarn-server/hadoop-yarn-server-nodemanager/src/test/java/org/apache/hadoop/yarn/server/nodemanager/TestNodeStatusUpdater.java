@@ -964,7 +964,7 @@ public class TestNodeStatusUpdater extends NodeManagerTestBase {
     nm.getNMContext().getContainers().putIfAbsent(cId, mock(Container.class));
 
     nodeStatusUpdater.addCompletedContainer(cId);
-    assertTrue(nodeStatusUpdater.isContainerRecentlyStopped(cId));     
+    assertTrue(nodeStatusUpdater.isContainerRecentlyStopped(cId));
   }
 
   @Test
