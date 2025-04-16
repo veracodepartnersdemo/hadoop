@@ -38,6 +38,8 @@ import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hadoop.net.NetUtils;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.slf4j.Logger;
@@ -186,6 +188,12 @@ public class TimelineConnector extends AbstractService {
 
   public static URI constructResURI(Configuration conf, String address,
       String uri) {
+    if (NetUtils.isIPV6Address(address)) {
+      // normalize the ip: port with ipv6 scheme
+      // For an address like ffff:ffff:ffff::0001:8080 will be transformed into
+      // [ffff:ffff:ffff::0001]:8080
+      address = NetUtils.normalizeV6Address(address);
+    }
     return URI.create(
         JOINER.join(YarnConfiguration.useHttps(conf) ? "https://" : "http://",
             address, uri));
