@@ -46,6 +46,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import static org.apache.hadoop.fs.FSExceptionMessages.CANNOT_SEEK_PAST_EOF;
+import static org.apache.hadoop.fs.FSExceptionMessages.EOF_IN_READ_FULLY;
+import static org.apache.hadoop.fs.FSExceptionMessages.NEGATIVE_POSITION_READ;
 import static org.apache.hadoop.fs.contract.ContractTestUtils.assertCapabilities;
 
 public class TestCryptoStreams extends CryptoStreamsTestBase {
@@ -340,16 +343,16 @@ public class TestCryptoStreams extends CryptoStreamsTestBase {
       }
 
       if (position > length) {
-        throw new IOException("Cannot read after EOF.");
+        throw new EOFException(CANNOT_SEEK_PAST_EOF);
       }
       if (position < 0) {
-        throw new IOException("Cannot read to negative offset.");
+        throw new EOFException(NEGATIVE_POSITION_READ);
       }
 
       checkStream();
 
       if (position + buf.remaining() > length) {
-        throw new EOFException("Reach the end of stream.");
+        throw new EOFException(EOF_IN_READ_FULLY);
       }
 
       buf.put(data, (int) position, buf.remaining());
