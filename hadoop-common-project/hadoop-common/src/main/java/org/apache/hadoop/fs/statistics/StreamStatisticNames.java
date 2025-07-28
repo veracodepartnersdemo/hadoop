@@ -132,6 +132,14 @@ public final class StreamStatisticNames {
   public static final String STREAM_READ_OPERATIONS =
       "stream_read_operations";
 
+  /** GET requests made by the analytics stream. */
+  public static final String STREAM_READ_ANALYTICS_GET_REQUESTS =
+          "stream_read_analytics_get_requests";
+
+  /** HEAD requests made by the analytics stream. */
+  public static final String STREAM_READ_ANALYTICS_HEAD_REQUESTS =
+          "stream_read_analytics_head_requests";
+
   /**
    * Count of readVectored() operations in an input stream.
    * Value: {@value}.

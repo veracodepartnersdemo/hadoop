@@ -42,13 +42,22 @@ import software.amazon.s3.analyticsaccelerator.common.ConnectorConfiguration;
 import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY;
 import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY_PARQUET;
 import static org.apache.hadoop.fs.Options.OpenFileOptions.FS_OPTION_OPENFILE_READ_POLICY_WHOLE_FILE;
+import static org.apache.hadoop.fs.contract.ContractTestUtils.writeDataset;
+import static org.apache.hadoop.fs.contract.ContractTestUtils.dataset;
 import static org.apache.hadoop.fs.s3a.Constants.ANALYTICS_ACCELERATOR_CONFIGURATION_PREFIX;
 import static org.apache.hadoop.fs.s3a.S3ATestUtils.enableAnalyticsAccelerator;
 import static org.apache.hadoop.fs.s3a.S3ATestUtils.removeBaseAndBucketOverrides;
 import static org.apache.hadoop.fs.s3a.test.PublicDatasetTestUtils.getExternalData;
 import static org.apache.hadoop.fs.statistics.IOStatisticAssertions.verifyStatisticCounterValue;
+
+import static org.apache.hadoop.fs.statistics.StreamStatisticNames.STREAM_READ_BYTES;
+import static org.apache.hadoop.fs.statistics.StreamStatisticNames.STREAM_READ_OPERATIONS;
+import static org.apache.hadoop.fs.statistics.StreamStatisticNames.STREAM_READ_ANALYTICS_GET_REQUESTS;
+import static org.apache.hadoop.fs.statistics.StreamStatisticNames.STREAM_READ_ANALYTICS_HEAD_REQUESTS;
 import static org.apache.hadoop.fs.statistics.StreamStatisticNames.STREAM_READ_ANALYTICS_OPENED;
 import static org.apache.hadoop.fs.statistics.StreamStatisticNames.ANALYTICS_STREAM_FACTORY_CLOSED;
+import static org.apache.hadoop.io.Sizes.S_1K;
+import static org.apache.hadoop.io.Sizes.S_1M;
 import static org.apache.hadoop.test.LambdaTestUtils.intercept;
 
 /**
@@ -104,6 +113,13 @@ public class ITestS3AAnalyticsAcceleratorStreamReading extends AbstractS3ATestBa
       Assertions.assertThat(objectInputStream.streamType()).isEqualTo(InputStreamType.Analytics);
       Assertions.assertThat(objectInputStream.getInputPolicy())
           .isEqualTo(S3AInputPolicy.Sequential);
+
+      verifyStatisticCounterValue(ioStats, STREAM_READ_BYTES, 500);
+      verifyStatisticCounterValue(ioStats, STREAM_READ_OPERATIONS, 1);
+
+      long streamBytesRead = objectInputStream.getS3AStreamStatistics().getBytesRead();
+      Assertions.assertThat(streamBytesRead).as("Stream statistics should track bytes read")
+              .isEqualTo(500);
     }
 
     verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_OPENED, 1);
@@ -129,14 +145,24 @@ public class ITestS3AAnalyticsAcceleratorStreamReading extends AbstractS3ATestBa
 
     byte[] buffer = new byte[500];
     IOStatistics ioStats;
+    int bytesRead;
 
     try (FSDataInputStream inputStream = getFileSystem().open(dest)) {
       ioStats = inputStream.getIOStatistics();
       inputStream.seek(5);
-      inputStream.read(buffer, 0, 500);
+      bytesRead = inputStream.read(buffer, 0, 500);
+
+      ObjectInputStream objectInputStream = (ObjectInputStream) inputStream.getWrappedStream();
+      long streamBytesRead = objectInputStream.getS3AStreamStatistics().getBytesRead();
+      Assertions.assertThat(streamBytesRead).as("Stream statistics should track bytes read")
+              .isEqualTo(bytesRead);
+
     }
 
     verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_OPENED, 1);
+    verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_GET_REQUESTS, 1);
+    // S3A passes in the meta data on file open, we expect AAL to make no HEAD requests
+    verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_HEAD_REQUESTS, 0);
   }
 
   /**
@@ -166,15 +192,20 @@ public class ITestS3AAnalyticsAcceleratorStreamReading extends AbstractS3ATestBa
     }
 
     verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_OPENED, 1);
-
+    verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_GET_REQUESTS, 1);
     try (FSDataInputStream inputStream = getFileSystem().openFile(dest)
         .must(FS_OPTION_OPENFILE_READ_POLICY, FS_OPTION_OPENFILE_READ_POLICY_PARQUET)
         .build().get()) {
       ioStats = inputStream.getIOStatistics();
       inputStream.readFully(buffer, 0, (int) fileStatus.getLen());
-    }
 
+      verifyStatisticCounterValue(ioStats, STREAM_READ_BYTES, (int) fileStatus.getLen());
+      verifyStatisticCounterValue(ioStats, STREAM_READ_OPERATIONS, 1);
+    }
     verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_OPENED, 1);
+    // S3A passes in the meta-data(content length) on file open,
+    // we expect AAL to make no HEAD requests
+    verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_HEAD_REQUESTS, 0);
   }
 
   @Test
@@ -194,4 +225,97 @@ public class ITestS3AAnalyticsAcceleratorStreamReading extends AbstractS3ATestBa
         () -> S3SeekableInputStreamConfiguration.fromConfiguration(connectorConfiguration));
   }
 
+  /**
+   * TXT files(SEQUENTIAL format) use SequentialPrefetcher(requests the entire 10MB file).
+   * RangeOptimiser splits ranges larger than maxRangeSizeBytes (8MB) using partSizeBytes (8MB)
+   * The 10MB range gets split into: [0-8MB) and [8MB-10MB)
+   * Each split range becomes a separate Block, resulting in 2 GET requests:
+   */
+  @Test
+  public void testLargeFileMultipleGets() throws Throwable {
+    describe("Large file should trigger multiple GET requests");
+
+    Path dest = path("large-test-file.txt");
+    byte[] data = dataset(10 * S_1M, 256, 255);
+    writeDataset(getFileSystem(), dest, data, 10 * S_1M, 1024, true);
+
+    byte[] buffer = new byte[S_1M * 10];
+    try (FSDataInputStream inputStream = getFileSystem().open(dest)) {
+      IOStatistics ioStats = inputStream.getIOStatistics();
+      inputStream.readFully(buffer);
+
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_GET_REQUESTS, 2);
+      // Because S3A passes in the meta-data(content length) on file open,
+      // we expect AAL to make no HEAD requests
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_HEAD_REQUESTS, 0);
+    }
+  }
+
+  @Test
+  public void testSmallFileSingleGet() throws Throwable {
+    describe("Small file should trigger only one GET request");
+
+    Path dest = path("small-test-file.txt");
+    byte[] data = dataset(S_1M, 256, 255);
+    writeDataset(getFileSystem(), dest, data, S_1M, 1024, true);
+
+    byte[] buffer = new byte[S_1M];
+    try (FSDataInputStream inputStream = getFileSystem().open(dest)) {
+      IOStatistics ioStats = inputStream.getIOStatistics();
+      inputStream.readFully(buffer);
+
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_GET_REQUESTS, 1);
+      // Because S3A passes in the meta-data(content length) on file open,
+      // we expect AAL to make no HEAD requests
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_HEAD_REQUESTS, 0);
+    }
+  }
+
+
+  @Test
+  public void testRandomSeekPatternGets() throws Throwable {
+    describe("Random seek pattern should optimize GET requests");
+
+    Path dest = path("seek-test.txt");
+    byte[] data = dataset(5 * S_1M, 256, 255);
+    writeDataset(getFileSystem(), dest, data, 5 * S_1M, 1024, true);
+
+    byte[] buffer = new byte[S_1M];
+    try (FSDataInputStream inputStream = getFileSystem().open(dest)) {
+      IOStatistics ioStats = inputStream.getIOStatistics();
+
+      inputStream.read(buffer);
+      inputStream.seek(2 * S_1M);
+      inputStream.read(new byte[512 * S_1K]);
+      inputStream.seek(3 * S_1M);
+      inputStream.read(new byte[512 * S_1K]);
+
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_GET_REQUESTS, 1);
+      verifyStatisticCounterValue(ioStats, STREAM_READ_ANALYTICS_HEAD_REQUESTS, 0);
+    }
+  }
+
+
+  @Test
+  public void testSequentialStreamsNoDuplicateGets() throws Throwable {
+    describe("Sequential streams reading same object should not duplicate GETs");
+
+    Path dest = path("sequential-test.txt");
+    byte[] data = dataset(S_1M, 256, 255);
+    writeDataset(getFileSystem(), dest, data, S_1M, 1024, true);
+
+    byte[] buffer = new byte[1024];
+    try (FSDataInputStream stream1 = getFileSystem().open(dest);
+         FSDataInputStream stream2 = getFileSystem().open(dest)) {
+
+      stream1.read(buffer);
+      stream2.read(buffer);
+
+      IOStatistics stats1 = stream1.getIOStatistics();
+      IOStatistics stats2 = stream2.getIOStatistics();
+
+      verifyStatisticCounterValue(stats1, STREAM_READ_ANALYTICS_GET_REQUESTS, 1);
+      verifyStatisticCounterValue(stats2, STREAM_READ_ANALYTICS_GET_REQUESTS, 0);
+    }
+  }
 }
