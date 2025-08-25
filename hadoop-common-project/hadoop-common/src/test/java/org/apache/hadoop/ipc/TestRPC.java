@@ -24,6 +24,7 @@ import org.apache.hadoop.ipc.metrics.RpcMetrics;
 
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.thirdparty.protobuf.ServiceException;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.HadoopIllegalArgumentException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.CommonConfigurationKeys;
@@ -76,7 +77,6 @@ import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -963,7 +963,7 @@ public class TestRPC extends TestRpcBase {
       for (int i = 0; i < numConcurrentRPC; i++) {
         final int num = i;
         final TestRpcService proxy = getClient(addr, conf);
-        Thread rpcThread = new Thread(new Runnable() {
+        Thread rpcThread = new HadoopThread(new Runnable() {
           @Override
           public void run() {
             try {
@@ -1231,17 +1231,17 @@ public class TestRPC extends TestRpcBase {
       final AtomicBoolean result = new AtomicBoolean();
 
       ExternalCall<String> remoteUserCall = newExtCall(ugi,
-          new PrivilegedExceptionAction<String>() {
+          new Callable<String>() {
             @Override
-            public String run() throws Exception {
+            public String call() throws Exception {
               return UserGroupInformation.getCurrentUser().getUserName();
             }
           });
 
       ExternalCall<String> exceptionCall = newExtCall(ugi,
-          new PrivilegedExceptionAction<String>() {
+          new Callable<String>() {
             @Override
-            public String run() throws Exception {
+            public String call() throws Exception {
               throw expectedIOE;
             }
           });
@@ -1250,9 +1250,9 @@ public class TestRPC extends TestRpcBase {
       final CyclicBarrier barrier = new CyclicBarrier(2);
 
       ExternalCall<Void> barrierCall = newExtCall(ugi,
-          new PrivilegedExceptionAction<Void>() {
+          new Callable<Void>() {
             @Override
-            public Void run() throws Exception {
+            public Void call() throws Exception {
               // notify we are in a handler and then wait to keep the callq
               // plugged up
               latch.countDown();
@@ -1291,7 +1291,7 @@ public class TestRPC extends TestRpcBase {
   }
 
   private <T> ExternalCall<T> newExtCall(UserGroupInformation ugi,
-      PrivilegedExceptionAction<T> callable) {
+      Callable<T> callable) {
     return new ExternalCall<T>(callable) {
       @Override
       public String getProtocol() {
@@ -1320,8 +1320,8 @@ public class TestRPC extends TestRpcBase {
     UserGroupInformation anotherUser =
         UserGroupInformation.createRemoteUser(testUser);
     TestRpcService proxy2 =
-        anotherUser.doAs(new PrivilegedAction<TestRpcService>() {
-          public TestRpcService run() {
+        anotherUser.callAs(new Callable<TestRpcService>() {
+          public TestRpcService call() {
             try {
               return RPC.getProxy(TestRpcService.class, 0,
                   server.getListenerAddress(), conf);
@@ -2006,7 +2006,7 @@ public class TestRPC extends TestRpcBase {
     UserGroupInformation anotherUser =
         UserGroupInformation.createRemoteUser(testUser);
     TestRpcService proxy2 =
-        anotherUser.doAs((PrivilegedAction<TestRpcService>) () -> {
+        anotherUser.callAs((Callable<TestRpcService>) () -> {
           try {
             return RPC.getProxy(TestRpcService.class, 0,
                 server.getListenerAddress(), conf);

@@ -20,8 +20,6 @@ package org.apache.hadoop.hdfs.server.namenode.ha;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.security.PrivilegedAction;
-import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
@@ -37,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import org.apache.hadoop.thirdparty.com.google.common.collect.Iterators;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.hadoop.util.Timer;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.classification.InterfaceAudience;
@@ -300,9 +299,9 @@ public class EditLogTailer {
     // Important to do tailing as the login user, in case the shared
     // edits storage is implemented by a JournalManager that depends
     // on security credentials to access the logs (eg QuorumJournalManager).
-    SecurityUtil.doAsLoginUser(new PrivilegedExceptionAction<Void>() {
+    SecurityUtil.callAsLoginUser(new Callable<Void>() {
       @Override
-      public Void run() throws Exception {
+      public Void call() throws Exception {
         long editsTailed = 0;
         // Fully tail the journal to the end
         do {
@@ -475,7 +474,7 @@ public class EditLogTailer {
    * The thread which does the actual work of tailing edits journals and
    * applying the transactions to the FSNS.
    */
-  private class EditLogTailerThread extends Thread {
+  private class EditLogTailerThread extends HadoopThread {
     private volatile boolean shouldRun = true;
     
     private EditLogTailerThread() {
@@ -487,11 +486,11 @@ public class EditLogTailer {
     }
     
     @Override
-    public void run() {
-      SecurityUtil.doAsLoginUserOrFatal(
-          new PrivilegedAction<Object>() {
+    public void work() {
+      SecurityUtil.callAsLoginUserOrFatalNoException(
+          new Callable<Object>() {
           @Override
-          public Object run() {
+          public Object call() {
             doWork();
             return null;
           }

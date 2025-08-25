@@ -21,8 +21,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 import java.net.URI;
-import java.security.PrivilegedExceptionAction;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -43,6 +43,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.tools.rumen.JobStoryProducer;
 import org.apache.hadoop.tools.rumen.ZombieJobProducer;
 import org.slf4j.Logger;
@@ -369,8 +370,8 @@ public class Gridmix extends Configured implements Tool {
     UserGroupInformation.setConfiguration(conf);
     UserGroupInformation ugi = UserGroupInformation.getLoginUser();
 
-    val = ugi.doAs(new PrivilegedExceptionAction<Integer>() {
-      public Integer run() throws Exception {
+    val = ugi.callAs(new Callable<Integer>() {
+      public Integer call() throws Exception {
         return runJob(conf, argv);
       }
     });
@@ -627,7 +628,7 @@ public class Gridmix extends Configured implements Tool {
    * pipeline abort its progress, waiting for each to exit and killing
    * any jobs still running on the cluster.
    */
-  class Shutdown extends Thread {
+  class Shutdown extends HadoopThread {
 
     static final long FAC_SLEEP = 1000;
     static final long SUB_SLEEP = 4000;
@@ -647,7 +648,7 @@ public class Gridmix extends Configured implements Tool {
     }
 
     @Override
-    public void run() {
+    public void work() {
       LOG.info("Exiting...");
       try {
         killComponent(factory, FAC_SLEEP);   // read no more tasks

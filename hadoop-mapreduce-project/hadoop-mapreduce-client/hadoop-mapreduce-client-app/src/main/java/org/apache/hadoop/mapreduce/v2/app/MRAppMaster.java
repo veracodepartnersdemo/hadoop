@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -134,6 +135,7 @@ import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.StringInterner;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.yarn.YarnUncaughtExceptionHandler;
 import org.apache.hadoop.yarn.api.ApplicationConstants;
 import org.apache.hadoop.yarn.api.ApplicationConstants.Environment;
@@ -739,10 +741,10 @@ public class MRAppMaster extends CompositeService {
     public void handle(JobFinishEvent event) {
       // Create a new thread to shutdown the AM. We should not do it in-line
       // to avoid blocking the dispatcher itself.
-      new Thread() {
+      new HadoopThread() {
         
         @Override
-        public void run() {
+        public void work() {
           shutDownJob();
         }
       }.start();
@@ -1761,9 +1763,9 @@ public class MRAppMaster extends CompositeService {
       }
     }
     conf.getCredentials().addAll(credentials);
-    appMasterUgi.doAs(new PrivilegedExceptionAction<Object>() {
+    appMasterUgi.callAs(new Callable<Object>() {
       @Override
-      public Object run() throws Exception {
+      public Object call() throws Exception {
         appMaster.init(conf);
         appMaster.start();
         if(appMaster.errorHappenedShutDown) {

@@ -49,7 +49,6 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -63,6 +62,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
@@ -124,6 +124,8 @@ import org.apache.hadoop.util.ExitUtil;
 import org.apache.hadoop.util.ProtoUtil;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
+import org.apache.hadoop.util.concurrent.HadoopThread;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.hadoop.tracing.Span;
 import org.apache.hadoop.tracing.SpanContext;
@@ -990,7 +992,7 @@ public abstract class Server {
 
   /** A generic call queued for handling. */
   public static class Call implements Schedulable,
-  PrivilegedExceptionAction<Void> {
+  Callable<Void> {
     private final ProcessingDetails processingDetails =
         new ProcessingDetails(TimeUnit.NANOSECONDS);
     // the method name to use in metrics
@@ -1091,7 +1093,7 @@ public abstract class Server {
     }
 
     @Override
-    public Void run() throws Exception {
+    public Void call() throws Exception {
       return null;
     }
     // should eventually be abstract but need to avoid breaking tests
@@ -1295,7 +1297,7 @@ public abstract class Server {
     }
 
     @Override
-    public Void run() throws Exception {
+    public Void call() throws Exception {
       if (!connection.channel.isOpen()) {
         Server.LOG.info(Thread.currentThread().getName() + ": skipped " + this);
         return null;
@@ -1307,7 +1309,7 @@ public abstract class Server {
       ResponseParams responseParams = new ResponseParams();
 
       try {
-        value = call(
+        value = Server.this.call(
             rpcKind, connection.protocolName, rpcRequest, getTimestampNanos());
       } catch (Throwable e) {
         populateResponseParamsOnError(e, responseParams);
@@ -1471,7 +1473,7 @@ public abstract class Server {
   }
 
   /** Listens on the socket. Creates jobs for the handler threads*/
-  private class Listener extends Thread {
+  private class Listener extends HadoopThread {
     
     private ServerSocketChannel acceptChannel = null; //the accept channel
     private Selector selector = null; //the selector that we use for the server
@@ -1520,7 +1522,7 @@ public abstract class Server {
       this.isOnAuxiliaryPort = true;
     }
     
-    private class Reader extends Thread {
+    private class Reader extends HadoopThread {
       final private BlockingQueue<Connection> pendingConnections;
       private final Selector readSelector;
 
@@ -1533,7 +1535,7 @@ public abstract class Server {
       }
       
       @Override
-      public void run() {
+      public void work() {
         LOG.info("Starting " + Thread.currentThread().getName());
         try {
           doRunLoop();
@@ -1612,7 +1614,7 @@ public abstract class Server {
     }
 
     @Override
-    public void run() {
+    public void work() {
       LOG.info(Thread.currentThread().getName() + ": starting");
       SERVER.set(Server.this);
       connectionManager.startIdleScan();
@@ -1760,7 +1762,7 @@ public abstract class Server {
   }
 
   // Sends responses of RPC back to clients.
-  private class Responder extends Thread {
+  private class Responder extends HadoopThread {
     private final Selector writeSelector;
     private int pending;         // connections waiting to register
 
@@ -1772,7 +1774,7 @@ public abstract class Server {
     }
 
     @Override
-    public void run() {
+    public void work() {
       LOG.info(Thread.currentThread().getName() + ": starting");
       SERVER.set(Server.this);
       try {
@@ -3219,7 +3221,7 @@ public abstract class Server {
   }
 
   /** Handles queued calls . */
-  private class Handler extends Thread {
+  private class Handler extends HadoopThread {
     public Handler(int instanceNumber) {
       this.setDaemon(true);
       this.setName("IPC Server handler "+ instanceNumber +
@@ -3227,7 +3229,7 @@ public abstract class Server {
     }
 
     @Override
-    public void run() {
+    public void work() {
       LOG.debug("{}: starting", Thread.currentThread().getName());
       SERVER.set(Server.this);
       while (running) {
@@ -3274,9 +3276,9 @@ public abstract class Server {
           UserGroupInformation remoteUser = call.getRemoteUser();
           connDropped = !call.isOpen();
           if (remoteUser != null) {
-            remoteUser.doAs(call);
+            remoteUser.callAs(call);
           } else {
-            call.run();
+            call.call();
           }
         } catch (InterruptedException e) {
           if (running) {                          // unexpected -- log it

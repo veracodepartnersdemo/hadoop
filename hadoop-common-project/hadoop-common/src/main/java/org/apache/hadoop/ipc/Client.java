@@ -54,6 +54,7 @@ import org.apache.hadoop.util.ProtoUtil;
 import org.apache.hadoop.util.StringUtils;
 import org.apache.hadoop.util.Time;
 import org.apache.hadoop.util.concurrent.AsyncGet;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.tracing.Span;
 import org.apache.hadoop.tracing.Tracer;
 import org.slf4j.Logger;
@@ -65,7 +66,6 @@ import javax.security.sasl.SaslException;
 import java.io.*;
 import java.net.*;
 import java.nio.ByteBuffer;
-import java.security.PrivilegedExceptionAction;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.*;
@@ -407,7 +407,7 @@ public class Client implements AutoCloseable {
   /** Thread that reads responses and notifies callers.  Each connection owns a
    * socket connected to a remote address.  Calls are multiplexed through this
    * socket: responses may be delivered out of order. */
-  private class Connection extends Thread {
+  private class Connection extends HadoopThread {
     private InetSocketAddress server;             // server ip:port
     private final ConnectionId remoteId;          // connection id
     private AuthMethod authMethod; // authentication method
@@ -448,7 +448,7 @@ public class Client implements AutoCloseable {
         Consumer<Connection> removeMethod) {
       this.remoteId = remoteId;
       this.server = remoteId.getAddress();
-      this.rpcRequestThread = new Thread(new RpcRequestSender(),
+      this.rpcRequestThread = new HadoopThread(new RpcRequestSender(),
           "IPC Parameter Sending Thread for " + remoteId);
       this.rpcRequestThread.setDaemon(true);
 
@@ -752,9 +752,9 @@ public class Client implements AutoCloseable {
         final int currRetries, final int maxRetries, final IOException ex,
         final Random rand, final UserGroupInformation ugi) throws IOException,
         InterruptedException {
-      ugi.doAs(new PrivilegedExceptionAction<Object>() {
+      ugi.callAs(new Callable<Object>() {
         @Override
-        public Object run() throws IOException, InterruptedException {
+        public Object call() throws IOException, InterruptedException {
           final short MAX_BACKOFF = 5000;
           closeConnection();
           disposeSasl();
@@ -838,9 +838,9 @@ public class Client implements AutoCloseable {
           if (authProtocol == AuthProtocol.SASL) {
             try {
               authMethod = ticket
-                  .doAs(new PrivilegedExceptionAction<AuthMethod>() {
+                  .callAs(new Callable<AuthMethod>() {
                     @Override
-                    public AuthMethod run()
+                    public AuthMethod call()
                         throws IOException, InterruptedException {
                       return setupSaslConnection(ipcStreams);
                     }
@@ -1126,7 +1126,7 @@ public class Client implements AutoCloseable {
     }
 
     @Override
-    public void run() {
+    public void work() {
       try {
         // Don't start the ipc parameter sending thread until we start this
         // thread, because the shutdown logic only gets triggered if this

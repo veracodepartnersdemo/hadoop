@@ -81,7 +81,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -90,6 +89,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CyclicBarrier;
 
 import org.apache.hadoop.util.Sets;
@@ -111,6 +111,7 @@ import org.apache.hadoop.security.token.Token;
 import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.util.Time;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.yarn.LocalConfigurationProvider;
 import org.apache.hadoop.yarn.api.ApplicationMasterProtocol;
 import org.apache.hadoop.yarn.api.protocolrecords.AllocateRequest;
@@ -1024,9 +1025,9 @@ public class TestCapacityScheduler {
           credentials.getAllTokens());
     currentUser.addToken(amRMToken);
     ApplicationMasterProtocol client =
-        currentUser.doAs(new PrivilegedAction<ApplicationMasterProtocol>() {
+        currentUser.callAsNoException(new Callable<ApplicationMasterProtocol>() {
           @Override
-          public ApplicationMasterProtocol run() {
+          public ApplicationMasterProtocol call() {
             return (ApplicationMasterProtocol) rpc.getProxy(
               ApplicationMasterProtocol.class, rmBindAddress, conf);
           }
@@ -1064,7 +1065,7 @@ public class TestCapacityScheduler {
     // grab the scheduler lock from another thread
     // and verify an allocate call in this thread doesn't block on it
     final CyclicBarrier barrier = new CyclicBarrier(2);
-    Thread otherThread = new Thread(new Runnable() {
+    Thread otherThread = new HadoopThread(new Runnable() {
       @Override
       public void run() {
         synchronized(cs) {

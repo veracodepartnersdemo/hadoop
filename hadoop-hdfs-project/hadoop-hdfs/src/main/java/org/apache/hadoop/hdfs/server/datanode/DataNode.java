@@ -124,7 +124,6 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.channels.ServerSocketChannel;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -262,6 +261,7 @@ import org.apache.hadoop.security.token.TokenIdentifier;
 import org.apache.hadoop.tracing.TraceUtils;
 import org.apache.hadoop.util.DiskChecker.DiskErrorException;
 import org.apache.hadoop.util.concurrent.HadoopExecutors;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.tracing.Tracer;
 import org.eclipse.jetty.util.ajax.JSON;
 
@@ -2381,9 +2381,9 @@ public class DataNode extends ReconfigurableBase
     final UserGroupInformation loginUgi = UserGroupInformation.getLoginUser();
     try {
       return loginUgi
-          .doAs(new PrivilegedExceptionAction<InterDatanodeProtocol>() {
+          .callAs(new Callable<InterDatanodeProtocol>() {
             @Override
-            public InterDatanodeProtocol run() throws IOException {
+            public InterDatanodeProtocol call() throws IOException {
               return new InterDatanodeProtocolTranslatorPB(addr, loginUgi,
                   conf, NetUtils.getDefaultSocketFactory(conf), socketTimeout);
             }
@@ -3855,8 +3855,8 @@ public class DataNode extends ReconfigurableBase
 
     // Asynchronously start the shutdown process so that the rpc response can be
     // sent back.
-    Thread shutdownThread = new Thread("Async datanode shutdown thread") {
-      @Override public void run() {
+    Thread shutdownThread = new HadoopThread("Async datanode shutdown thread") {
+      @Override public void work() {
         if (!shutdownForUpgrade) {
           // Delay the shutdown a bit if not doing for restart.
           try {

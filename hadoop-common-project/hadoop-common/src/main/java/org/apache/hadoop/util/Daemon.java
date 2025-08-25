@@ -18,16 +18,70 @@
 
 package org.apache.hadoop.util;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ThreadFactory;
+
+import javax.security.auth.Subject;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.classification.InterfaceStability;
 
-/** A thread that has called {@link Thread#setDaemon(boolean) } with true.*/
+/** A thread that has called {@link Thread#setDaemon(boolean) } with true.
+ * 
+ * The runnable code must either be specified in the runnable parameter or
+ * in the override work() method. 
+ * 
+ * The subject propagation is already added in either case. 
+ * 
+ * */
 @InterfaceAudience.LimitedPrivate({"HDFS", "MapReduce"})
 @InterfaceStability.Unstable
 public class Daemon extends Thread {
 
+  Subject startSubject;
+  
+  @Override
+  public final void start() {
+    startSubject = SubjectUtil.current();
+    super.start();
+  }
+  
+  /**
+   * Override this instead of run()
+   */
+  public void work() {
+    throw new IllegalArgumentException("");
+  }
+  
+  @Override
+  public final void run() {
+    try {
+      SubjectUtil.callAs(startSubject, new Callable<Void>() {
+
+        @Override
+        public Void call() throws Exception {
+          if (runnable != null) {
+            runnable.run();
+          } else {
+            work();
+          }
+          return null;
+        }
+
+      });
+    } catch (CompletionException ce) {
+      Throwable t = ce.getCause();
+      if (t instanceof RuntimeException) {
+        throw (RuntimeException) t;
+      } else if (t instanceof Error) {
+        throw (Error) t;
+      } else {
+        throw new RuntimeException("Unexpected exception", t);
+      }
+    }
+  }
+  
   {
     setDaemon(true);                              // always a daemon
   }

@@ -22,7 +22,6 @@ import static org.apache.hadoop.util.Time.monotonicNow;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -50,6 +49,7 @@ import org.apache.hadoop.util.Lists;
 
 import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.util.Preconditions;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.thirdparty.com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import org.slf4j.Logger;
@@ -386,7 +386,7 @@ public class StandbyCheckpointer {
       img.getStorage().getMostRecentCheckpointTxId();
   }
 
-  private class CheckpointerThread extends Thread {
+  private class CheckpointerThread extends HadoopThread {
     private volatile boolean shouldRun = true;
     private volatile long preventCheckpointsUntil = 0;
 
@@ -399,13 +399,13 @@ public class StandbyCheckpointer {
     }
 
     @Override
-    public void run() {
+    public void work() {
       // We have to make sure we're logged in as far as JAAS
       // is concerned, in order to use kerberized SSL properly.
-      SecurityUtil.doAsLoginUserOrFatal(
-          new PrivilegedAction<Object>() {
+      SecurityUtil.callAsLoginUserOrFatalNoException(
+          new Callable<Object>() {
           @Override
-          public Object run() {
+          public Object call() {
             doWork();
             return null;
           }

@@ -41,13 +41,14 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.tools.rumen.JobStory;
 import org.apache.hadoop.tools.rumen.ResourceUsageMetrics;
 import org.apache.hadoop.tools.rumen.TaskInfo;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.yarn.util.ResourceCalculatorPlugin;
 
 import java.io.IOException;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.Callable;
 
 /**
  * Synthetic job generated from a trace description.
@@ -64,9 +65,9 @@ class LoadJob extends GridmixJob {
 
   public Job call() throws IOException, InterruptedException,
                            ClassNotFoundException {
-    ugi.doAs(
-      new PrivilegedExceptionAction<Job>() {
-        public Job run() throws IOException, ClassNotFoundException,
+    ugi.callAs(
+      new Callable<Job>() {
+        public Job call() throws IOException, ClassNotFoundException,
                                 InterruptedException {
           job.setMapperClass(LoadMapper.class);
           job.setReducerClass(LoadReducer.class);
@@ -143,7 +144,7 @@ class LoadJob extends GridmixJob {
    * This is a progress based resource usage matcher.
    */
   @SuppressWarnings("unchecked")
-  static class ResourceUsageMatcherRunner extends Thread 
+  static class ResourceUsageMatcherRunner extends HadoopThread 
   implements Progressive {
     private final ResourceUsageMatcher matcher;
     private final BoostingProgress progress;
@@ -199,7 +200,7 @@ class LoadJob extends GridmixJob {
     }
     
     @Override
-    public void run() {
+    public void work() {
       LOG.info("Resource usage matcher thread started.");
       try {
         while (progress.getProgress() < 1) {
@@ -234,7 +235,7 @@ class LoadJob extends GridmixJob {
   
   // Makes sure that the TaskTracker doesn't kill the map/reduce tasks while
   // they are emulating
-  private static class StatusReporter extends Thread {
+  private static class StatusReporter extends HadoopThread {
     private final TaskAttemptContext context;
     private final Progressive progress;
     
@@ -244,7 +245,7 @@ class LoadJob extends GridmixJob {
     }
     
     @Override
-    public void run() {
+    public void work() {
       LOG.info("Status reporter thread started.");
       try {
         while (!isInterrupted() && progress.getProgress() < 1) {

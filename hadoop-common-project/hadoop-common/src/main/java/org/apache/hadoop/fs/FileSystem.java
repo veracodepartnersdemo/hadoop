@@ -25,7 +25,6 @@ import java.lang.ref.WeakReference;
 import java.lang.ref.ReferenceQueue;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +42,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
@@ -81,6 +81,7 @@ import org.apache.hadoop.util.Progressable;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.StringUtils;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.apache.hadoop.tracing.Tracer;
 import org.apache.hadoop.tracing.TraceScope;
 import org.apache.hadoop.util.Preconditions;
@@ -271,9 +272,9 @@ public abstract class FileSystem extends Configured
       conf.get(CommonConfigurationKeys.KERBEROS_TICKET_CACHE_PATH);
     UserGroupInformation ugi =
         UserGroupInformation.getBestUGI(ticketCachePath, user);
-    return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+    return ugi.callAs(new Callable<FileSystem>() {
       @Override
-      public FileSystem run() throws IOException {
+      public FileSystem call() throws IOException {
         return get(uri, conf);
       }
     });
@@ -574,9 +575,9 @@ public abstract class FileSystem extends Configured
       conf.get(CommonConfigurationKeys.KERBEROS_TICKET_CACHE_PATH);
     UserGroupInformation ugi =
         UserGroupInformation.getBestUGI(ticketCachePath, user);
-    return ugi.doAs(new PrivilegedExceptionAction<FileSystem>() {
+    return ugi.callAs(new Callable<FileSystem>() {
       @Override
-      public FileSystem run() throws IOException {
+      public FileSystem call() throws IOException {
         return newInstance(uri, conf);
       }
     });
@@ -4087,7 +4088,7 @@ public abstract class FileSystem extends Configured
     static {
       STATS_DATA_REF_QUEUE = new ReferenceQueue<>();
       // start a single daemon cleaner thread
-      STATS_DATA_CLEANER = new Thread(new StatisticsDataReferenceCleaner());
+      STATS_DATA_CLEANER = new HadoopThread(new StatisticsDataReferenceCleaner());
       STATS_DATA_CLEANER.
           setName(StatisticsDataReferenceCleaner.class.getName());
       STATS_DATA_CLEANER.setDaemon(true);

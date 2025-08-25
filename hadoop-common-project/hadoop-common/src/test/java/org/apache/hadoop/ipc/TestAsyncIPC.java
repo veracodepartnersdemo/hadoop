@@ -97,7 +97,7 @@ public class TestAsyncIPC {
 
     @Override
     public void run() {
-      // In case Thread#Start is called, which will spawn new thread.
+      // in case Thread#Start is called, which will spawn new thread
       Client.setAsynchronousMode(true);
       for (int i = 0; i < count; i++) {
         try {

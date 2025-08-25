@@ -21,10 +21,10 @@ import org.apache.hadoop.thirdparty.com.google.common.base.Splitter;
 import org.apache.hadoop.tools.dynamometer.workloadgenerator.WorkloadDriver;
 import java.io.IOException;
 import java.net.URI;
-import java.security.PrivilegedAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +43,7 @@ import org.apache.hadoop.security.UserGroupInformation;
 
 import org.apache.hadoop.tools.dynamometer.workloadgenerator.audit.AuditReplayMapper.REPLAYCOUNTERS;
 import org.apache.hadoop.tools.dynamometer.workloadgenerator.audit.AuditReplayMapper.ReplayCommand;
+import org.apache.hadoop.util.concurrent.HadoopThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ import static org.apache.hadoop.tools.dynamometer.workloadgenerator.audit.AuditR
  * are inserted by the {@link AuditReplayMapper}. Once an item is ready, this
  * thread will fetch the command from the queue and attempt to replay it.
  */
-public class AuditReplayThread extends Thread {
+public class AuditReplayThread extends HadoopThread {
 
   private static final Logger LOG =
       LoggerFactory.getLogger(AuditReplayThread.class);
@@ -154,7 +155,7 @@ public class AuditReplayThread extends Thread {
   }
 
   @Override
-  public void run() {
+  public void work() {
     long currentEpoch = System.currentTimeMillis();
     long delay = startTimestampMs - currentEpoch;
     try {
@@ -202,7 +203,7 @@ public class AuditReplayThread extends Thread {
     if (proxyFs == null) {
       UserGroupInformation ugi = UserGroupInformation
           .createProxyUser(command.getSimpleUgi(), loginUser);
-      proxyFs = ugi.doAs((PrivilegedAction<FileSystem>) () -> {
+      proxyFs = ugi.callAsNoException((Callable<FileSystem>) () -> {
         try {
           FileSystem fs = new DistributedFileSystem();
           fs.initialize(namenodeUri, mapperConf);
