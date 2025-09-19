@@ -21,6 +21,7 @@ package org.apache.hadoop.fs.s3a.impl.streams;
 
 import java.io.IOException;
 
+import org.apache.hadoop.fs.s3a.impl.AnalyticsStreamRetryPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +49,7 @@ public class AnalyticsStreamFactory extends AbstractObjectInputStreamFactory {
 
   private S3SeekableInputStreamConfiguration seekableInputStreamConfiguration;
   private LazyAutoCloseableReference<S3SeekableInputStreamFactory>  s3SeekableInputStreamFactory;
+  private AnalyticsStreamRetryPolicy retryPolicy;
   private boolean requireCrt;
 
   public AnalyticsStreamFactory() {
@@ -62,6 +64,7 @@ public class AnalyticsStreamFactory extends AbstractObjectInputStreamFactory {
     this.seekableInputStreamConfiguration =
                 S3SeekableInputStreamConfiguration.fromConfiguration(configuration);
     this.requireCrt = false;
+    this.retryPolicy = new AnalyticsStreamRetryPolicy(conf);
   }
 
   @Override
@@ -75,7 +78,7 @@ public class AnalyticsStreamFactory extends AbstractObjectInputStreamFactory {
   public ObjectInputStream readObject(final ObjectReadParameters parameters) throws IOException {
     return new AnalyticsStream(
                 parameters,
-                getOrCreateS3SeekableInputStreamFactory());
+                getOrCreateS3SeekableInputStreamFactory(), retryPolicy.getAnalyticsRetryStrategy());
   }
 
   @Override
