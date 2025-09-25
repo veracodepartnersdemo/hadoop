@@ -1,0 +1,100 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.apache.hadoop.classification.tools;
+
+import jdk.javadoc.doclet.Reporter;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+
+class StabilityOptions {
+  public static final String STABLE_OPTION = "-stable";
+  public static final String EVOLVING_OPTION = "-evolving";
+  public static final String UNSTABLE_OPTION = "-unstable";
+
+  enum Level { STABLE, EVOLVING, UNSTABLE }
+  private static volatile Level level = Level.STABLE;
+
+  static void setLevel(Level l) {
+    if (l != null) level = l;
+  }
+
+  public static Integer optionLength(String option) {
+    String opt = option.toLowerCase(Locale.ENGLISH);
+    if (opt.equals(UNSTABLE_OPTION)) return 1;
+    if (opt.equals(EVOLVING_OPTION)) return 1;
+    if (opt.equals(STABLE_OPTION)) return 1;
+    return null;
+  }
+
+  static void setFromOptionName(String optName) {
+    String opt = optName.toLowerCase(Locale.ENGLISH);
+    Level next = null;
+    if (opt.equals(UNSTABLE_OPTION)) next = Level.UNSTABLE;
+    else if (opt.equals(EVOLVING_OPTION)) next = Level.EVOLVING;
+    else if (opt.equals(STABLE_OPTION)) next = Level.STABLE;
+    if (next != null && next.ordinal() > level.ordinal()) {
+      level = next;
+    }
+  }
+
+  static Level getLevel() {
+    return level;
+  }
+
+  static void applyToRootProcessor() {
+    switch (level) {
+      case UNSTABLE:
+        RootDocProcessor.stability = UNSTABLE_OPTION;
+        break;
+      case EVOLVING:
+        RootDocProcessor.stability = EVOLVING_OPTION;
+        break;
+      default:
+        RootDocProcessor.stability = STABLE_OPTION;
+    }
+  }
+
+  public static void validOptions(String[][] options,
+      Reporter reporter) {
+    for (int i = 0; i < options.length; i++) {
+      String opt = options[i][0].toLowerCase(Locale.ENGLISH);
+      setFromOptionName(opt);
+    }
+    applyToRootProcessor();
+  }
+  
+  public static String[][] filterOptions(String[][] options) {
+    List<String[]> optionsList = new ArrayList<String[]>();
+    for (int i = 0; i < options.length; i++) {
+      if (!options[i][0].equalsIgnoreCase(UNSTABLE_OPTION)
+          && !options[i][0].equalsIgnoreCase(EVOLVING_OPTION)
+          && !options[i][0].equalsIgnoreCase(STABLE_OPTION)) {
+        optionsList.add(options[i]);
+      }
+    }
+    String[][] filteredOptions = new String[optionsList.size()][];
+    int i = 0;
+    for (String[] option : optionsList) {
+      filteredOptions[i++] = option;
+    }
+    return filteredOptions;
+  }
+
+}
