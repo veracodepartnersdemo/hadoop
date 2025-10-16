@@ -175,7 +175,8 @@ public class TestRMHA {
         .get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = response.readEntity(JSONObject.class);
+    String raw = response.readEntity(String.class);
+    JSONObject json = new JSONObject(raw);
 
     assertEquals(1, json.length(), "incorrect number of elements");
     JSONObject appJson = json.getJSONObject("app");
