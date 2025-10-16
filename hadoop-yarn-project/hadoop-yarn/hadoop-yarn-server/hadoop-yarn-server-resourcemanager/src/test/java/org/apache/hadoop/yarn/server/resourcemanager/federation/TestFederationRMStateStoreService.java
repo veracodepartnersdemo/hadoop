@@ -17,6 +17,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.federation;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.fromJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -103,15 +104,11 @@ public class TestFederationRMStateStoreService {
   private Configuration conf;
   private FederationStateStore stateStore;
   private long lastHearbeatTS = 0;
-  private JettisonJaxbContext jettisonJaxbContext;
-  private JettisonUnmarshaller jsonUnmarshaller;
   private MockRM mockRM;
 
   @BeforeEach
   public void setUp() throws IOException, YarnException, JAXBException {
     conf = new YarnConfiguration();
-    this.jettisonJaxbContext = new JettisonJaxbContext(ClusterMetricsInfo.class);
-    this.jsonUnmarshaller = jettisonJaxbContext.createJsonUnmarshaller();
     conf.setBoolean(YarnConfiguration.FEDERATION_ENABLED, true);
     conf.setInt(YarnConfiguration.FEDERATION_STATESTORE_HEARTBEAT_INITIAL_DELAY, 10);
     conf.set(YarnConfiguration.RM_CLUSTER_ID, subClusterId.getId());
@@ -124,8 +121,6 @@ public class TestFederationRMStateStoreService {
 
   @AfterEach
   public void tearDown() throws Exception {
-    jettisonJaxbContext = null;
-    jsonUnmarshaller = null;
     mockRM.stop();
     mockRM = null;
   }
@@ -201,8 +196,7 @@ public class TestFederationRMStateStoreService {
 
   private void checkClusterMetricsInfo(String capability, int numNodes)
       throws JAXBException {
-    ClusterMetricsInfo clusterMetricsInfo = jsonUnmarshaller.unmarshalFromJSON(
-        new StringReader(capability), ClusterMetricsInfo.class);
+    ClusterMetricsInfo clusterMetricsInfo = fromJson(capability, ClusterMetricsInfo.class);
     assertEquals(numNodes, clusterMetricsInfo.getTotalNodes());
   }
 

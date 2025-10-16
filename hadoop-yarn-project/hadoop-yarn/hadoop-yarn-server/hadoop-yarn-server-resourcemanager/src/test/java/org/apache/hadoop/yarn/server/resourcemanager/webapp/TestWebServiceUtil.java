@@ -39,6 +39,7 @@ import javax.ws.rs.core.Response;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -47,6 +48,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.transform.stream.StreamSource;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -384,5 +386,19 @@ public final class TestWebServiceUtil {
     StringWriter stringWriter = new StringWriter();
     marshaller.marshal(obj, stringWriter);
     return stringWriter.toString();
+  }
+
+  public static <T> T fromJson(String json, Class<T> klass) {
+    try {
+      JAXBContext jc = new JAXBContextResolver().getContext(klass);
+      if (jc == null) {
+        jc = JAXBContext.newInstance(klass);
+      }
+      Unmarshaller unmarshaller = jc.createUnmarshaller();
+      unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+      return unmarshaller.unmarshal(new StreamSource(new StringReader(json)),klass).getValue();
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to read from json: " + json, e);
+    }
   }
 }
