@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -30,7 +31,6 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.Principal;
@@ -111,7 +111,6 @@ import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.apache.hadoop.yarn.webapp.WebServicesTestUtils;
 
-import com.google.gson.Gson;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -126,9 +125,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import com.google.inject.Singleton;
-import org.glassfish.jersey.jettison.JettisonJaxbContext;
-import org.glassfish.jersey.jettison.JettisonMarshaller;
-import org.glassfish.jersey.jettison.internal.entity.JettisonObjectProvider.App;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
@@ -337,7 +333,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
   }
 
   private WebTarget constructWebResource(String... paths) {
-    WebTarget r = target().register(App.class);
+    WebTarget r = target();
     WebTarget ws = r.path("ws").path("v1").path("cluster");
     return this.constructWebResource(ws, paths);
   }
@@ -399,7 +395,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
 
         Object entity;
         if (contentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-          entity = appStateToJSON(targetState);
+          entity = toJson(targetState, AppState.class);
         } else {
           entity = targetState;
         }
@@ -495,7 +491,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
           AppState targetState = new AppState(targetStateString);
           Object entity;
           if (contentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-            entity = appStateToJSON(targetState);
+            entity = toJson(targetState, AppState.class);
           } else {
             entity = targetState;
           }
@@ -517,10 +513,6 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
     }
 
     rm.stop();
-  }
-
-  private static String appStateToJSON(AppState state) throws Exception {
-    return new Gson().toJson(state);
   }
 
   protected static void verifyAppStateJson(Response response,
@@ -726,7 +718,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       SAXException {
     String ret = "";
     if (resp.getMediaType().toString().contains(MediaType.APPLICATION_JSON)) {
-      JSONObject json = resp.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(resp);
       ret = validateGetNewApplicationJsonResponse(json);
     } else if (resp.getMediaType().toString().contains(MediaType.APPLICATION_XML)) {
       String xml = resp.readEntity(String.class);
@@ -1151,7 +1143,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
         AppPriority priority = new AppPriority(modifiedPriority);
         Object entity;
         if (contentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-          entity = appPriorityToJSON(priority);
+          entity = toJson(priority, AppPriority.class);
         } else {
           entity = priority;
         }
@@ -1240,7 +1232,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
         AppQueue targetQueue = new AppQueue("test");
         Object entity;
         if (contentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-          entity = appQueueToJSON(targetQueue);
+          entity = toJson(targetQueue, AppQueue.class);
         } else {
           entity = targetQueue;
         }
@@ -1285,15 +1277,6 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       }
     }
     rm.stop();
-  }
-
-  protected static String appPriorityToJSON(AppPriority targetPriority)
-      throws Exception {
-    return new Gson().toJson(targetPriority);
-  }
-
-  protected static String appQueueToJSON(AppQueue targetQueue) throws Exception {
-    return new Gson().toJson(targetQueue);
   }
 
   protected static void verifyAppPriorityJson(Response response,
@@ -1445,7 +1428,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
 
     Object entity;
     if (contentType.equals(MediaType.APPLICATION_JSON_TYPE)) {
-      entity = appTimeoutToJSON(timeoutUpdate);
+      entity = toJson(timeoutUpdate, AppTimeoutInfo.class);
     } else {
       entity = timeoutUpdate;
     }
@@ -1492,14 +1475,5 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
         WebServicesTestUtils.getXmlString(element, "expiryTime"));
     assertTrue(WebServicesTestUtils.getXmlLong(element,
         "remainingTimeInSeconds") < timeOutFromNow);
-  }
-
-  protected static String appTimeoutToJSON(AppTimeoutInfo timeout)
-      throws Exception {
-    StringWriter stringWriter = new StringWriter();
-    JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(AppTimeoutInfo.class);
-    JettisonMarshaller jettisonMarshaller = jettisonJaxbContext.createJsonMarshaller();
-    jettisonMarshaller.marshallToJSON(timeout, stringWriter);
-    return stringWriter.toString();
   }
 }

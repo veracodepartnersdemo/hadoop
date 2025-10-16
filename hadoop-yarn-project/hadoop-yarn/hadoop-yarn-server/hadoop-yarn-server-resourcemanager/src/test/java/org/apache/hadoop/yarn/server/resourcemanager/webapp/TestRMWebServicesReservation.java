@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.fromJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -84,8 +85,6 @@ import org.codehaus.jettison.json.JSONObject;
 import org.junit.jupiter.api.AfterEach;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.jettison.JettisonJaxbContext;
-import org.glassfish.jersey.jettison.JettisonUnmarshaller;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -112,17 +111,6 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
   private static final String LIST_RESERVATION_PATH = "reservation/list";
   private static final String GET_NEW_RESERVATION_PATH =
       "reservation/new-reservation";
-
-  private static JettisonUnmarshaller reservationSubmissionRequestInfoReader;
-  static {
-    try {
-      JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(
-          ReservationSubmissionRequestInfo.class);
-      reservationSubmissionRequestInfoReader = jettisonJaxbContext.createJsonUnmarshaller();
-    } catch (JAXBException e) {
-      throw new RuntimeException(e);
-    }
-  }
 
   private ResourceConfig config;
   private HttpServletRequest hsRequest = mock(HttpServletRequest.class);
@@ -1051,10 +1039,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json =
-        response.
-        readEntity(JSONObject.class).
-        getJSONObject("new-reservation");
+      JSONObject json = responseToJson(response).getJSONObject("new-reservation");
 
     assertEquals(1, json.length(), "incorrect number of elements");
     ReservationId rid = null;
@@ -1094,9 +1079,9 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
   private Response submitAndVerifyReservation(String path, String media,
       String reservationJson) throws Exception {
-    ReservationSubmissionRequestInfo rsci = reservationSubmissionRequestInfoReader.
-        unmarshalFromJSON(new StringReader(reservationJson),
-        ReservationSubmissionRequestInfo.class);
+    ReservationSubmissionRequestInfo rsci =
+        fromJson(reservationJson, ReservationSubmissionRequestInfo.class);
+
     Thread.sleep(1000);
     Response response = constructWebResource(path)
         .request(MediaType.APPLICATION_JSON)
@@ -1116,18 +1101,8 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
     String reservationJson = loadJsonFile("update-reservation.json");
 
-    JettisonUnmarshaller reservationUpdateRequestInfoReader;
-    try {
-      JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(
-          ReservationUpdateRequestInfo.class);
-      reservationUpdateRequestInfoReader = jettisonJaxbContext.createJsonUnmarshaller();
-    } catch (JAXBException e) {
-      throw new RuntimeException(e);
-    }
-
-    ReservationUpdateRequestInfo rsci = reservationUpdateRequestInfoReader.
-        unmarshalFromJSON(new StringReader(reservationJson),
-        ReservationUpdateRequestInfo.class);
+    ReservationUpdateRequestInfo rsci =
+        fromJson(reservationJson, ReservationUpdateRequestInfo.class);
 
     if (this.isAuthenticationEnabled()) {
       // only works when previous submit worked
@@ -1174,18 +1149,8 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
     String reservationJson = loadJsonFile("delete-reservation.json");
 
-    JettisonUnmarshaller reader;
-    try {
-      JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(
-          ReservationDeleteRequestInfo.class);
-      reader = jettisonJaxbContext.createJsonUnmarshaller();
-    } catch (JAXBException e) {
-      throw new RuntimeException(e);
-    }
-
-    ReservationDeleteRequestInfo rsci = reader.
-        unmarshalFromJSON(new StringReader(reservationJson),
-        ReservationDeleteRequestInfo.class);
+    ReservationDeleteRequestInfo rsci =
+        fromJson(reservationJson, ReservationDeleteRequestInfo.class);
 
     if (this.isAuthenticationEnabled()) {
       // only works when previous submit worked

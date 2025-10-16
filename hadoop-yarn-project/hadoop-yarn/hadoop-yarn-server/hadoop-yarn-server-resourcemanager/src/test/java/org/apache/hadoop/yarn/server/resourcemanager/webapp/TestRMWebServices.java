@@ -123,7 +123,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.TestProperties;
 
