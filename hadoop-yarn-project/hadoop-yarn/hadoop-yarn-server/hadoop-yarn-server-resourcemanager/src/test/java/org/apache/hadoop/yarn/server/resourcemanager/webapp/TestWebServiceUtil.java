@@ -54,6 +54,8 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.jettison.JettisonMarshaller;
@@ -341,6 +343,15 @@ public final class TestWebServiceUtil {
       if (!file.renameTo(getCapacitySchedulerConfigFileInTarget())) {
         throw new RuntimeException("Failed to restore configuration file");
       }
+    }
+  }
+
+  public static JSONObject responseToJson(Response response) {
+    String res = response.readEntity(String.class);
+    try {
+      return new JSONObject(res);
+    } catch (JSONException e) {
+      throw new RuntimeException("Failed to parse JSON: " + res, e);
     }
   }
 

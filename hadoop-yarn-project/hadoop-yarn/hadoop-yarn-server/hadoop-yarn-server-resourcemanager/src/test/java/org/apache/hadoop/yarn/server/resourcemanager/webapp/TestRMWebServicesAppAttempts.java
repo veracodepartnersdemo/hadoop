@@ -64,6 +64,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.util.Collection;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.checkStringMatch;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -155,7 +156,7 @@ public class TestRMWebServicesAppAttempts extends JerseyTestBase {
         .path("apps").path(app1.getApplicationId().toString())
         .path("appattempts").request(MediaType.APPLICATION_JSON)
         .get(Response.class);
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     JSONObject jsonAppAttempts = json.getJSONObject("appAttempts");
     JSONArray jsonArray = jsonAppAttempts.getJSONArray("appAttempt");
     JSONObject info = jsonArray.getJSONObject(0);
@@ -247,7 +248,7 @@ public class TestRMWebServicesAppAttempts extends JerseyTestBase {
       assertResponseStatusCode(Response.Status.BAD_REQUEST, response.getStatusInfo());
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject msg = response.readEntity(JSONObject.class);
+      JSONObject msg = responseToJson(response);
       JSONObject exception = msg.getJSONObject("RemoteException");
       assertEquals(3, exception.length(), "incorrect number of elements");
       String message = exception.getString("message");
@@ -284,7 +285,7 @@ public class TestRMWebServicesAppAttempts extends JerseyTestBase {
           response.getStatusInfo());
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject msg = response.readEntity(JSONObject.class);
+      JSONObject msg = responseToJson(response);
       JSONObject exception = msg.getJSONObject("RemoteException");
       assertEquals(3, exception.length(), "incorrect number of elements");
       String message = exception.getString("message");
@@ -325,7 +326,7 @@ public class TestRMWebServicesAppAttempts extends JerseyTestBase {
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
 
-      JSONObject msg = response.readEntity(JSONObject.class);
+      JSONObject msg = responseToJson(response);
       JSONObject exception = msg.getJSONObject("RemoteException");
       assertEquals(3, exception.length(), "incorrect number of elements");
       String message = exception.getString("message");
@@ -349,7 +350,7 @@ public class TestRMWebServicesAppAttempts extends JerseyTestBase {
         .get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
     JSONObject jsonAppAttempts = json.getJSONObject("appAttempts");
     assertEquals(1, jsonAppAttempts.length(), "incorrect number of elements");

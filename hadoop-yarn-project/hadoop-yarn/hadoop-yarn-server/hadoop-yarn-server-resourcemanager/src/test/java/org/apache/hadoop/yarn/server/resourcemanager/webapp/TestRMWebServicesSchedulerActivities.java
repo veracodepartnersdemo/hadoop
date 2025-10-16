@@ -32,7 +32,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.activities.Activi
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.activities.ActivityState;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
-import org.apache.hadoop.yarn.server.resourcemanager.webapp.reader.NodeLabelsInfoReader;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.junit.jupiter.api.BeforeEach;
@@ -101,6 +100,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTes
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyNumberOfNodes;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyQueueOrder;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyStateOfAllocations;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -120,7 +120,6 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
     config.register(RMWebServices.class);
     config.register(new JerseyBinder());
     config.register(GenericExceptionHandler.class);
-    config.register(NodeLabelsInfoReader.class);
     config.register(JsonProviderFeature.class);
     config.register(JAXBContextResolver.class);
     forceSet(TestProperties.CONTAINER_PORT, JERSEY_RANDOM_PORT);
@@ -232,7 +231,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       nm.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -243,7 +242,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       // Collection logic of scheduler activities changed after YARN-9313,
       // only one allocation should be recorded for all scenarios.
@@ -296,7 +295,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       nm.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -307,7 +306,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       // verify scheduler activities
       verifyNumberOfAllocations(json, 1);
@@ -335,7 +334,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       Thread.sleep(1000);
 
@@ -345,7 +344,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 0);
     } finally {
@@ -388,7 +387,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       nm.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -399,7 +398,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 0);
     } finally {
@@ -454,7 +453,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       nm2.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -464,7 +463,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
 
@@ -482,7 +481,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       nm2.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -492,7 +491,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
 
@@ -517,7 +516,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       nm2.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -527,7 +526,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
 
@@ -568,7 +567,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
 
       nm.nodeHeartbeat(true);
       Thread.sleep(1000);
@@ -579,7 +578,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
 
@@ -895,7 +894,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
       assertEquals("waiting for next allocation",
           getFirstSubNodeFromJson(json, FN_SCHEDULER_ACT_ROOT)
               .optString(FN_ACT_DIAGNOSTIC));
@@ -913,7 +912,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
       JSONObject allocationObj = getFirstSubNodeFromJson(json,
@@ -969,7 +968,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = response.readEntity(JSONObject.class);
+      JSONObject json = responseToJson(response);
       assertEquals("waiting for next allocation",
           getFirstSubNodeFromJson(json, FN_SCHEDULER_ACT_ROOT)
               .optString(FN_ACT_DIAGNOSTIC));
@@ -983,7 +982,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
 
       verifyNumberOfAllocations(json, 1);
       JSONObject allocationObj = getFirstSubNodeFromJson(json,
@@ -1766,7 +1765,7 @@ public class TestRMWebServicesSchedulerActivities extends JerseyTestBase {
 
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";"
           + JettyUtils.UTF_8, response.getMediaType().toString());
-      json = response.readEntity(JSONObject.class);
+      json = responseToJson(response);
       done = true;
     }
   }

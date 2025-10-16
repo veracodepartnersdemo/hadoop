@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.createRM;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 
 import java.io.File;
@@ -748,8 +749,7 @@ public class TestRMWebServicesDelegationTokens extends JerseyTestBase {
           throws IOException, ParserConfigurationException, SAXException,
           JSONException {
     if (response.getMediaType().toString().contains(MediaType.APPLICATION_JSON)) {
-      return getDelegationTokenFromJson(
-          response.readEntity(JSONObject.class));
+      return getDelegationTokenFromJson(responseToJson(response));
     }
     return getDelegationTokenFromXML(response.readEntity(String.class));
   }

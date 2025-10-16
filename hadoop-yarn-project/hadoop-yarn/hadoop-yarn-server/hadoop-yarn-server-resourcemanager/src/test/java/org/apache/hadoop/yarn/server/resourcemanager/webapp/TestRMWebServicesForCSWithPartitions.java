@@ -26,6 +26,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTes
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.getFirstSubNodeFromJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyNumberOfAllocations;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.createRM;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -285,7 +286,7 @@ public class TestRMWebServicesForCSWithPartitions extends JerseyTestBase {
         .request(MediaType.APPLICATION_JSON).get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     verifySchedulerInfoJson(json);
   }
 
@@ -300,7 +301,7 @@ public class TestRMWebServicesForCSWithPartitions extends JerseyTestBase {
         .request(MediaType.APPLICATION_JSON).get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     verifySchedulerInfoJson(json);
 
   }
@@ -315,7 +316,7 @@ public class TestRMWebServicesForCSWithPartitions extends JerseyTestBase {
         .path("scheduler").request().get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     verifySchedulerInfoJson(json);
   }
 

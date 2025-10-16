@@ -32,12 +32,9 @@ import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.ResourceScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.fifo.FifoScheduler;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
-import org.apache.hadoop.yarn.server.resourcemanager.webapp.reader.ApplicationSubmissionContextInfoReader;
-import org.apache.hadoop.yarn.server.resourcemanager.webapp.writer.ApplicationSubmissionContextInfoWriter;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.codehaus.jettison.json.JSONObject;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -58,6 +55,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServic
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.assertXmlResponse;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.backupSchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.createRM;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.restoreSchedulerConfigFileInTarget;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -79,8 +77,6 @@ public class TestRMWebServicesCapacitySched extends JerseyTestBase {
     config.register(RMWebServices.class);
     config.register(new JerseyBinder());
     config.register(GenericExceptionHandler.class);
-    config.register(ApplicationSubmissionContextInfoWriter.class);
-    config.register(ApplicationSubmissionContextInfoReader.class);
     config.register(TestRMWebServicesAppsModification.TestRMCustomAuthFilter.class);
     config.register(JsonProviderFeature.class);
     return config;
@@ -184,7 +180,7 @@ public class TestRMWebServicesCapacitySched extends JerseyTestBase {
     Response response = targetWithJsonObject().path("ws/v1/cluster/scheduler-overview")
         .request(MediaType.APPLICATION_JSON).get(Response.class);
     assertJsonType(response);
-    JSONObject json = response.readEntity(JSONObject.class);
+    JSONObject json = responseToJson(response);
     JSONObject scheduler = json.getJSONObject("scheduler");
     TestRMWebServices.verifyClusterSchedulerOverView(scheduler, "Capacity Scheduler");
   }

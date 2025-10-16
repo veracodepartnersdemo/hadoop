@@ -18,6 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
@@ -1240,7 +1241,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
         response.getMediaType().toString());
     assertResponseStatusCode(status, response.getStatusInfo());
 
-    return response.readEntity(JSONObject.class);
+    return responseToJson(response);
   }
 
   private void verifyReservationCount(int count) throws Exception {
