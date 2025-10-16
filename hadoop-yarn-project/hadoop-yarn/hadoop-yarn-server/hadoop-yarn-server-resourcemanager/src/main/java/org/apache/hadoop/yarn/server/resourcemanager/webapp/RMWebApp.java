@@ -24,7 +24,6 @@ import java.net.InetSocketAddress;
 
 import org.apache.hadoop.conf.Configuration;
 
-import org.glassfish.jersey.moxy.json.MoxyJsonConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.ha.HAServiceProtocol.HAServiceState;
@@ -39,7 +38,6 @@ import org.apache.hadoop.yarn.webapp.YarnWebParams;
 
 import javax.servlet.Filter;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
-import org.glassfish.jersey.jettison.JettisonFeature;
 import org.glassfish.jersey.server.ResourceConfig;
 
 /**

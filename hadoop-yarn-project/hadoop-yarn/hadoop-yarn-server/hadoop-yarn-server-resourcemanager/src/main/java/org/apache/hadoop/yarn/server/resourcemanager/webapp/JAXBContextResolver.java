@@ -20,13 +20,10 @@ package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
-import org.glassfish.jersey.jettison.JettisonConfig;
-import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
