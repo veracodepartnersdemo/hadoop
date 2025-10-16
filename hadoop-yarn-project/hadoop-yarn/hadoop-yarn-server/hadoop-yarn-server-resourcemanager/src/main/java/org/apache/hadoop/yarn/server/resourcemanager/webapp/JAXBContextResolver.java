@@ -43,9 +43,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.ClassSe
 @Singleton
 @Provider
 public class JAXBContextResolver implements ContextResolver<JAXBContext> {
-
   private static final Logger LOG = LoggerFactory.getLogger(JAXBContextResolver.class.getName());
-
   private final Map<Class, JAXBContext> typesContextMap = new HashMap<>();
 
   public JAXBContextResolver() throws Exception {

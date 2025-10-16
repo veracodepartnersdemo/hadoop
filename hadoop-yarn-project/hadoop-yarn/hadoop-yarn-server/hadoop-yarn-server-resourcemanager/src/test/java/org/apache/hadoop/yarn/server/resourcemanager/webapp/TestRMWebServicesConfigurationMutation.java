@@ -36,7 +36,6 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.QueuePre
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeLabelInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeLabelsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
-import org.apache.hadoop.yarn.server.resourcemanager.webapp.reader.NodeLabelsInfoReader;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.apache.hadoop.yarn.webapp.dao.QueueConfigInfo;
@@ -74,7 +73,7 @@ import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.C
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.getCapacitySchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.backupSchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.restoreSchedulerConfigFileInTarget;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJsonNoRoot;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -109,7 +108,6 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
     config.register(RMWebServices.class);
     config.register(new JerseyBinder());
     config.register(GenericExceptionHandler.class);
-    config.register(NodeLabelsInfoReader.class);
     config.register(TestRMWebServicesAppsModification.TestRMCustomAuthFilter.class);
     config.register(JsonProviderFeature.class);
     config.register(JAXBContextResolver.class);
@@ -804,7 +802,6 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
         newCSConf.getMaximumSystemApplications());
   }
 
-  //TODO: fix, some missing label
   @Test
   public void testNodeLabelRemovalResidualConfigsAreCleared() throws Exception {
     WebTarget r = target();
@@ -824,7 +821,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
     response = addNodeLabelsResource.queryParam("user.name", userName)
         .request(MediaType.APPLICATION_JSON)
         .post(Entity.entity(logAndReturnJson(addNodeLabelsResource,
-        toJsonNoRoot(nodeLabelsInfo, NodeLabelsInfo.class)), MediaType.APPLICATION_JSON), Response.class);
+        toJson(nodeLabelsInfo, NodeLabelsInfo.class)), MediaType.APPLICATION_JSON), Response.class);
 
     // 2. Verify new Node Label
     response = getNodeLabelsResource.queryParam("user.name", userName)
@@ -854,7 +851,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
     response = schedulerConfResource
         .queryParam("user.name", userName)
         .request(MediaType.APPLICATION_JSON)
-        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJsonNoRoot(updateInfo,
+        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJson(updateInfo,
         SchedConfUpdateInfo.class)), MediaType.APPLICATION_JSON), Response.class);
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
@@ -901,7 +898,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
     response = schedulerConfResource
         .queryParam("user.name", userName)
         .request(MediaType.APPLICATION_JSON)
-        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJsonNoRoot(updateInfo,
+        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJson(updateInfo,
         SchedConfUpdateInfo.class)), MediaType.APPLICATION_JSON),
         Response.class);
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
@@ -953,7 +950,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
     response = schedulerConfResource
         .queryParam("user.name", userName)
         .request(MediaType.APPLICATION_JSON)
-        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJsonNoRoot(updateInfo,
+        .put(Entity.entity(logAndReturnJson(schedulerConfResource, toJson(updateInfo,
         SchedConfUpdateInfo.class)), MediaType.APPLICATION_JSON), Response.class);
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
     assertEquals(Sets.newHashSet("*"),

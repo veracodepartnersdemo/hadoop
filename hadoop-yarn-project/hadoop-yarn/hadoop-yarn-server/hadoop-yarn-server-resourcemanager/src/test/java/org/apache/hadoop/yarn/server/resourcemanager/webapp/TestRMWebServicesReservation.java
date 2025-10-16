@@ -18,7 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJsonRoot;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1100,7 +1100,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
     Response response = constructWebResource(path)
         .request(MediaType.APPLICATION_JSON)
         .accept(media)
-        .post(Entity.entity(toJsonRoot(rsci, ReservationSubmissionRequestInfo.class),
+        .post(Entity.entity(toJson(rsci, ReservationSubmissionRequestInfo.class),
         MediaType.APPLICATION_JSON_TYPE), Response.class);
 
     if (!this.isAuthenticationEnabled()) {
@@ -1140,7 +1140,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
     Response response = constructWebResource(path)
         .request(MediaType.APPLICATION_JSON)
         .accept(media)
-        .post(Entity.entity(toJsonRoot(rsci, ReservationUpdateRequestInfo.class),
+        .post(Entity.entity(toJson(rsci, ReservationUpdateRequestInfo.class),
         MediaType.APPLICATION_JSON_TYPE), Response.class);
 
     if (!this.isAuthenticationEnabled()) {
@@ -1198,7 +1198,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
     Response response = constructWebResource(path)
         .request(MediaType.APPLICATION_JSON)
         .accept(media)
-        .post(Entity.entity(toJsonRoot(rsci, ReservationDeleteRequestInfo.class),
+        .post(Entity.entity(toJson(rsci, ReservationDeleteRequestInfo.class),
         MediaType.APPLICATION_JSON_TYPE), Response.class);
     if (!this.isAuthenticationEnabled()) {
       assertResponseStatusCode(Response.Status.UNAUTHORIZED, response.getStatusInfo());

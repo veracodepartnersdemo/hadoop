@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.parsers.DocumentBuilder;
@@ -53,7 +54,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.gson.Gson;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.glassfish.jersey.jettison.JettisonJaxbContext;
 import org.glassfish.jersey.jettison.JettisonMarshaller;
 import org.w3c.dom.Document;
@@ -345,31 +346,31 @@ public final class TestWebServiceUtil {
 
   public static String toEntity(Object obj, Class<?> klass, String mediaType)
       throws Exception {
-    if (mediaType == MediaType.APPLICATION_JSON) {
-      return toJsonNoRoot(obj, klass);
+    if (MediaType.APPLICATION_JSON.equals(mediaType)) {
+      return toJson(obj, klass);
     }
-    if(mediaType == MediaType.APPLICATION_XML) {
+    if(MediaType.APPLICATION_XML.equals(mediaType)) {
       return toXml(obj, klass);
     }
     return null;
   }
 
-  public static String toJsonRoot(Object obj, Class<?> klass) throws Exception {
+  public static String toJson(Object obj, Class<?> klass) throws Exception {
+    JAXBContext jc = new JAXBContextResolver().getContext(klass);
+    Marshaller marshaller = jc.createMarshaller();
+    marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
+    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
     StringWriter stringWriter = new StringWriter();
-    JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(klass);
-    JettisonMarshaller jettisonMarshaller = jettisonJaxbContext.createJsonMarshaller();
-    jettisonMarshaller.marshallToJSON(obj, stringWriter);
+    marshaller.marshal(obj, stringWriter);
     return stringWriter.toString();
   }
 
-  public static String toJsonNoRoot(Object obj, Class<?> klass) throws Exception {
-    return new Gson().toJson(obj, klass);
-  }
-
-  public static String toXml(Object obj, Class<?> klass) throws JAXBException {
+  public static String toXml(Object obj, Class<?> klass) throws Exception {
+    JAXBContext jc = new JAXBContextResolver().getContext(klass);
+    Marshaller marshaller = jc.createMarshaller();
+    marshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_XML);
+    marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
     StringWriter stringWriter = new StringWriter();
-    JettisonJaxbContext jettisonJaxbContext = new JettisonJaxbContext(klass);
-    Marshaller marshaller = jettisonJaxbContext.createMarshaller();
     marshaller.marshal(obj, stringWriter);
     return stringWriter.toString();
   }

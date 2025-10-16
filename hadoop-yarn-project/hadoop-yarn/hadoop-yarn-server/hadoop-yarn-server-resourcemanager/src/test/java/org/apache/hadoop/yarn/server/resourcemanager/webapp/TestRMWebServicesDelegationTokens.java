@@ -86,7 +86,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJsonNoRoot;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toEntity;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -279,7 +279,7 @@ public class TestRMWebServicesDelegationTokens extends JerseyTestBase {
     final String renewer = "test-renewer";
     DelegationToken token = new DelegationToken();
     token.setRenewer(renewer);
-    String jsonBody = toJsonNoRoot(token, DelegationToken.class);
+    String jsonBody = toJson(token, DelegationToken.class);
     String xmlBody =
         "<delegation-token><renewer>" + renewer
             + "</renewer></delegation-token>";
@@ -478,7 +478,7 @@ public class TestRMWebServicesDelegationTokens extends JerseyTestBase {
             if (mediaType.equals(MediaType.APPLICATION_JSON)) {
               DelegationToken dToken = new DelegationToken();
               dToken.setToken(token);
-              body = toJsonNoRoot(dToken, DelegationToken.class);
+              body = toJson(dToken, DelegationToken.class);
             } else {
               body =
                   "<delegation-token><token>" + token
@@ -511,7 +511,7 @@ public class TestRMWebServicesDelegationTokens extends JerseyTestBase {
       DelegationToken delegationToken = new DelegationToken();
       body = "{\"token\": \"" + token + "\" }";
       delegationToken.setToken("test-123");
-      body = toJsonNoRoot(delegationToken, DelegationToken.class);
+      body = toJson(delegationToken, DelegationToken.class);
     } else {
       body =
           "<delegation-token><token>" + token + "</token></delegation-token>";
@@ -823,7 +823,7 @@ public class TestRMWebServicesDelegationTokens extends JerseyTestBase {
     if (mediaType.contains(MediaType.APPLICATION_JSON)) {
       DelegationToken dToken = new DelegationToken();
       dToken.setToken(token);
-      body = toJsonNoRoot(dToken, DelegationToken.class);
+      body = toJson(dToken, DelegationToken.class);
     } else {
       body =
           "<delegation-token><token>" + token + "</token></delegation-token>";

@@ -18,7 +18,7 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJsonNoRoot;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -311,11 +311,11 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     DelegationToken createRequestToken = new DelegationToken();
     createRequestToken.setRenewer("test");
     String createRequest =
-        toJsonNoRoot(createRequestToken, DelegationToken.class);
+        toJson(createRequestToken, DelegationToken.class);
     DelegationToken renewRequestToken = new DelegationToken();
     renewRequestToken.setToken(token);
     String renewRequest =
-        toJsonNoRoot(renewRequestToken, DelegationToken.class);
+        toJson(renewRequestToken, DelegationToken.class);
 
     // first test create and renew
     String[] requests = { createRequest, renewRequest };
@@ -363,7 +363,7 @@ public class TestRMWebServicesDelegationTokenAuthentication {
         String renewer = "renewer";
         DelegationToken token2 = new DelegationToken();
         token2.setRenewer(renewer);
-        String body = toJsonNoRoot(token2, DelegationToken.class);
+        String body = toJson(token2, DelegationToken.class);
         URL url =
             new URL("http://localhost:8088/ws/v1/cluster/delegation-token?doAs=client2");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -399,7 +399,7 @@ public class TestRMWebServicesDelegationTokenAuthentication {
     String renewer = "renewer";
     DelegationToken token2 = new DelegationToken();
     token2.setRenewer(renewer);
-    String body = toJsonNoRoot(token2, DelegationToken.class);
+    String body = toJson(token2, DelegationToken.class);
 
     URL url =
         new URL("http://localhost:8088/ws/v1/cluster/delegation-token?doAs=client2");
@@ -445,7 +445,7 @@ public class TestRMWebServicesDelegationTokenAuthentication {
         String ret = null;
         DelegationToken token = new DelegationToken();
         token.setRenewer(renewer);
-        String body = toJsonNoRoot(token, DelegationToken.class);
+        String body = toJson(token, DelegationToken.class);
         URL url =
             new URL("http://localhost:8088/ws/v1/cluster/delegation-token");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
