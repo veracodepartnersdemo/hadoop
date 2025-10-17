@@ -30,7 +30,6 @@ import static org.mockito.Mockito.when;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URL;
 import java.security.Principal;
 import java.util.Arrays;
@@ -47,7 +46,6 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.xml.bind.JAXBException;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.hadoop.conf.Configuration;
@@ -1039,7 +1037,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-      JSONObject json = responseToJson(response).getJSONObject("new-reservation");
+    JSONObject json = responseToJson(response).getJSONObject("new-reservation");
 
     assertEquals(1, json.length(), "incorrect number of elements");
     ReservationId rid = null;

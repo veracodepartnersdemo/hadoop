@@ -26,9 +26,6 @@ import org.codehaus.jettison.json.JSONObject;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.checkStringEqual;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.checkStringMatch;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**

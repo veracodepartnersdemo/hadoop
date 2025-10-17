@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -87,12 +87,15 @@ import org.apache.hadoop.yarn.webapp.dao.ConfInfo;
 import org.apache.hadoop.yarn.webapp.dao.SchedConfUpdateInfo;
 
 /**
- * Configuration holder for class serialization setup used by the ResourceManager web services layer.
+ * Configuration holder for class serialization setup
+ * used by the ResourceManager web services layer.
  *
  * <p>This class manages two categories of data transfer objects (DTOs):</p>
  * <ul>
- *   <li><b>Wrapped classes</b> – classes whose JSON representation includes a root wrapper element.</li>
- *   <li><b>Unwrapped classes</b> – classes whose JSON representation omits a root wrapper element.</li>
+ *   <li><b>Wrapped classes</b>
+ *     – classes whose JSON representation includes a root wrapper element.</li>
+ *   <li><b>Unwrapped classes</b>
+ *     – classes whose JSON representation omits a root wrapper element.</li>
  * </ul>
  *
  * <p>The configuration is initialized with a default list of constant classes and may optionally
@@ -139,87 +142,60 @@ import org.apache.hadoop.yarn.webapp.dao.SchedConfUpdateInfo;
 public class ClassSerialisationConfig {
   private static final Logger LOG = LoggerFactory.getLogger(ClassSerialisationConfig.class);
 
-  private static final Set<Class<?>> CONST_WRAPPED_CLASSES = Sets.newHashSet(
-      ActivitiesInfo.class,
-      AppActivitiesInfo.class,
-      AppAttemptInfo.class,
-      AppAttemptsInfo.class,
-      AppInfo.class,
-      ApplicationStatisticsInfo.class,
-      AppsInfo.class,
-      AppTimeoutInfo.class,
-      AppTimeoutsInfo.class,
-      BulkActivitiesInfo.class,
-      CapacitySchedulerHealthInfo.class,
-      CapacitySchedulerInfo.class,
-      CapacitySchedulerQueueInfo.class,
-      CapacitySchedulerQueueInfoList.class,
-      ClusterInfo.class,
-      ClusterMetricsInfo.class,
-      ConfigVersionInfo.class,
-      FairSchedulerQueueInfoList.class,
-      FifoSchedulerInfo.class,
-      NewReservation.class,
-      NodeInfo.class,
-      NodesInfo.class,
-      QueueAclInfo.class,
-      QueueAclsInfo.class,
-      RemoteExceptionData.class,
-      ReservationDeleteRequestInfo.class,
-      ReservationDeleteResponseInfo.class,
-      ReservationSubmissionRequestInfo.class,
-      ReservationUpdateRequestInfo.class,
-      ReservationUpdateResponseInfo.class,
-      ResourceInfo.class,
-      ResourceInformationsInfo.class,
-      SchedulerInfo.class,
-      SchedulerOverviewInfo.class,
-      SchedulerTypeInfo.class,
-      StatisticsItemInfo.class,
-      UserInfo.class,
-      UserMetricsInfo.class,
-      UsersInfo.class
-  );
+  private static final Set<Class<?>> CONST_WRAPPED_CLASSES =
+      Sets.newHashSet(ActivitiesInfo.class, AppActivitiesInfo.class, AppAttemptInfo.class,
+          AppAttemptsInfo.class, AppInfo.class, ApplicationStatisticsInfo.class, AppsInfo.class,
+          AppTimeoutInfo.class, AppTimeoutsInfo.class, BulkActivitiesInfo.class,
+          CapacitySchedulerHealthInfo.class, CapacitySchedulerInfo.class,
+          CapacitySchedulerQueueInfo.class, CapacitySchedulerQueueInfoList.class, ClusterInfo.class,
+          ClusterMetricsInfo.class, ConfigVersionInfo.class, FairSchedulerQueueInfoList.class,
+          FifoSchedulerInfo.class, NewReservation.class, NodeInfo.class, NodesInfo.class,
+          QueueAclInfo.class, QueueAclsInfo.class, RemoteExceptionData.class,
+          ReservationDeleteRequestInfo.class, ReservationDeleteResponseInfo.class,
+          ReservationSubmissionRequestInfo.class, ReservationUpdateRequestInfo.class,
+          ReservationUpdateResponseInfo.class, ResourceInfo.class, ResourceInformationsInfo.class,
+          SchedulerInfo.class, SchedulerOverviewInfo.class, SchedulerTypeInfo.class,
+          StatisticsItemInfo.class, UserInfo.class, UserMetricsInfo.class, UsersInfo.class);
 
-  private static final Set<Class<?>> CONST_UNWRAPPED_CLASSES = Sets.newHashSet(
-      ApplicationSubmissionContextInfo.class,
-      AppPriority.class,
-      AppQueue.class,
-      AppState.class,
-      ClusterUserInfo.class,
-      ConfInfo.class,
-      ContainerLaunchContextInfo.class,
-      DelegationToken.class,
-      LabelsToNodesInfo.class,
-      LocalResourceInfo.class,
-      NewApplication.class,
-      NodeLabelsInfo.class,
-      NodeToLabelsEntryList.class,
-      NodeToLabelsInfo.class,
-      ReservationListInfo.class,
-      ResourceOptionInfo.class,
-      SchedConfUpdateInfo.class
-  );
+  private static final Set<Class<?>> CONST_UNWRAPPED_CLASSES =
+      Sets.newHashSet(ApplicationSubmissionContextInfo.class, AppPriority.class, AppQueue.class,
+          AppState.class, ClusterUserInfo.class, ConfInfo.class, ContainerLaunchContextInfo.class,
+          DelegationToken.class, LabelsToNodesInfo.class, LocalResourceInfo.class,
+          NewApplication.class, NodeLabelsInfo.class, NodeToLabelsEntryList.class,
+          NodeToLabelsInfo.class, ReservationListInfo.class, ResourceOptionInfo.class,
+          SchedConfUpdateInfo.class);
 
   private final Set<Class<?>> wrappedClasses;
   private final Set<Class<?>> unWrappedClasses;
 
+  /**
+   * Default constructor
+   */
   public ClassSerialisationConfig() {
     this(new Configuration());
   }
 
+  /**
+   * Constructs a new {@code ClassSerialisationConfig} instance and initializes
+   * the sets of wrapped and unwrapped classes used for JSON serialization.
+   *
+   * @param conf the Hadoop {@link Configuration} instance (typically injected via
+   *             dependency injection) used to load optional custom class definitions
+   */
   @Inject
   public ClassSerialisationConfig(@javax.inject.Named("conf") Configuration conf) {
     wrappedClasses = new HashSet<>(CONST_WRAPPED_CLASSES);
     try {
-      wrappedClasses.addAll(Arrays.asList(conf.getClasses(YarnConfiguration.YARN_HTTP_WEBAPP_CUSTOM_DAO_CLASSES)));
+      wrappedClasses.addAll(
+          Arrays.asList(conf.getClasses(YarnConfiguration.YARN_HTTP_WEBAPP_CUSTOM_DAO_CLASSES)));
     } catch (RuntimeException e) {
       LOG.warn("Failed to load YARN_HTTP_WEBAPP_CUSTOM_DAO_CLASSES", e);
     }
 
     unWrappedClasses = new HashSet<>(CONST_UNWRAPPED_CLASSES);
     try {
-      wrappedClasses.addAll(Arrays.asList(conf.getClasses(YarnConfiguration.YARN_HTTP_WEBAPP_CUSTOM_UNWRAPPED_DAO_CLASSES)));
+      wrappedClasses.addAll(Arrays.asList(
+          conf.getClasses(YarnConfiguration.YARN_HTTP_WEBAPP_CUSTOM_UNWRAPPED_DAO_CLASSES)));
     } catch (RuntimeException e) {
       LOG.warn("Failed to load YARN_HTTP_WEBAPP_CUSTOM_DAO_CLASSES", e);
     }
@@ -229,19 +205,34 @@ public class ClassSerialisationConfig {
 
     Set<Class<?>> duplicates = new HashSet<>(wrappedClasses);
     duplicates.retainAll(unWrappedClasses);
-
     if (!duplicates.isEmpty()) {
       throw new Error(String.format("Duplicate classes found: %s", duplicates));
     }
   }
 
+  /**
+   * Returns the set of classes whose JSON representation should include a root element.
+   * <p>
+   * These classes are used by MOXy JSON providers to determine which data transfer
+   * objects (DTOs) should be wrapped with a root element when serialized.
+   * </p>
+   *
+   * @return an unmodifiable {@link Set} of wrapped classes
+   */
   public Set<Class<?>> getWrappedClasses() {
     return wrappedClasses;
   }
 
+  /**
+   * Returns the set of classes whose JSON representation should omit the root element.
+   * <p>
+   * These classes are used by MOXy JSON providers to determine which data transfer
+   * objects (DTOs) should be serialized without a root element in the JSON output.
+   * </p>
+   *
+   * @return an unmodifiable {@link Set} of unwrapped classes
+   */
   public Set<Class<?>> getUnWrappedClasses() {
     return unWrappedClasses;
   }
-
-
 }

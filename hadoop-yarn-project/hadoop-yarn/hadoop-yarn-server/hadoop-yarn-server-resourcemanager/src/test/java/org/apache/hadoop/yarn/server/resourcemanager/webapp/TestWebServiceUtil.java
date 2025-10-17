@@ -393,7 +393,7 @@ public final class TestWebServiceUtil {
       }
       Unmarshaller unmarshaller = jc.createUnmarshaller();
       unmarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, MediaType.APPLICATION_JSON);
-      return unmarshaller.unmarshal(new StreamSource(new StringReader(json)),klass).getValue();
+      return unmarshaller.unmarshal(new StreamSource(new StringReader(json)), klass).getValue();
     } catch (Exception e) {
       throw new RuntimeException("Failed to read from json: " + json, e);
     }
