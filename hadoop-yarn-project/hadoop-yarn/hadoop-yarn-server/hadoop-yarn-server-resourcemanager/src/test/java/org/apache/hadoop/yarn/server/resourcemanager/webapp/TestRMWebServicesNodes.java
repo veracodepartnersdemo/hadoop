@@ -313,7 +313,7 @@ public class TestRMWebServicesNodes extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("nodes").toString(), "nodes is not empty");
+    assertEquals("{}", json.get("nodes").toString(), "nodes is not empty");
   }
 
   @Test
@@ -442,7 +442,7 @@ public class TestRMWebServicesNodes extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("nodes").toString(), "nodes is not empty");
+    assertEquals("{}", json.get("nodes").toString(), "nodes is not empty");
   }
 
   public void testNodesHelper(String path, String media) throws JSONException,

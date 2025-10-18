@@ -192,8 +192,6 @@ public class TestFederationRMStateStoreService {
 
   private void checkClusterMetricsInfo(String capability, int numNodes) {
     ClusterMetricsInfo clusterMetricsInfo = fromJson(capability, ClusterMetricsInfo.class);
-    System.err.println(capability);
-    System.err.println(clusterMetricsInfo.getTotalNodes());
     assertEquals(numNodes, clusterMetricsInfo.getTotalNodes());
   }
 

@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
+import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -47,7 +48,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.util.Lists;
 
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.http.JettyUtils;
@@ -209,9 +209,11 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
         webTarget = webTarget.queryParam(param.getKey(), value);
       }
     }
-    return webTarget.request(MediaType.APPLICATION_JSON)
-        .post(Entity.entity(toJson(payload, payloadClass),
-        MediaType.APPLICATION_JSON), Response.class);
+    Entity<String> entity = payload == null
+        ? null
+        : Entity.entity(toJson(payload, payloadClass) ,MediaType.APPLICATION_JSON);
+
+    return webTarget.request(MediaType.APPLICATION_JSON).post(entity, Response.class);
   }
 
   @Test
@@ -690,13 +692,5 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
     NodeIDsInfo nodes = labelsToNodesInfo.getLabelsToNodes().get(new NodeLabelInfo(LABEL_A));
     assertNotNull(nodes.getPartitionInfo());
     assertNotNull(nodes.getPartitionInfo().getResourceAvailable());
-  }
-
-  @SuppressWarnings("rawtypes")
-  private String toJson(Object obj, Class klass) throws Exception {
-    if (obj == null) {
-      return null;
-    }
-    return new Gson().toJson(obj, klass);
   }
 }

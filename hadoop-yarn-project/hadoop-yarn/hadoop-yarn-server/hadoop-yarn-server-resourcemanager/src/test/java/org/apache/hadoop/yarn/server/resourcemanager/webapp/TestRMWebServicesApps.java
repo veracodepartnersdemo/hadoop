@@ -423,7 +423,7 @@ public class TestRMWebServicesApps extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("apps").toString(), "apps is not empty");
+    assertEquals("{}", json.get("apps").toString(), "apps is not empty");
     rm.stop();
   }
 
@@ -443,7 +443,7 @@ public class TestRMWebServicesApps extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("apps").toString(), "apps is not empty");
+    assertEquals("{}", json.get("apps").toString(), "apps is not empty");
     rm.stop();
   }
 
@@ -557,7 +557,7 @@ public class TestRMWebServicesApps extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("apps").toString(), "apps is not null");
+    assertEquals("{}", json.get("apps").toString(), "apps is not null");
     rm.stop();
   }
 
@@ -844,7 +844,7 @@ public class TestRMWebServicesApps extends JerseyTestBase {
         response.getMediaType().toString());
     JSONObject json = responseToJson(response);
     assertEquals(1, json.length(), "incorrect number of elements");
-    assertEquals(new JSONObject().toString(), json.get("apps").toString(), "apps is not empty");
+    assertEquals("{}", json.get("apps").toString(), "apps is not empty");
     rm.stop();
   }
 
