@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -154,7 +153,7 @@ public class TestRMWebServiceAppsNodelabel extends JerseyTestBase {
     Response response =
         r.path("ws").path("v1").path("cluster").path("apps")
         .request(MediaType.APPLICATION_JSON).get(Response.class);
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     JSONObject apps = json.getJSONObject("apps");
     assertEquals(1, apps.length(), "incorrect number of elements");
     try {
@@ -195,7 +194,7 @@ public class TestRMWebServiceAppsNodelabel extends JerseyTestBase {
 
     Response response = r.path("ws").path("v1").path("cluster").path("apps")
         .request(MediaType.APPLICATION_JSON).get(Response.class);
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
 
     // Verify apps resource
     JSONObject apps = json.getJSONObject("apps");

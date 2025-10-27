@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -520,7 +519,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     assertEquals(1, json.length(), "incorrect number of elements");
     String responseState = json.getString("state");
     boolean valid = false;
@@ -718,7 +717,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       SAXException {
     String ret = "";
     if (resp.getMediaType().toString().contains(MediaType.APPLICATION_JSON)) {
-      JSONObject json = responseToJson(resp);
+      JSONObject json = resp.readEntity(JSONObject.class);
       ret = validateGetNewApplicationJsonResponse(json);
     } else if (resp.getMediaType().toString().contains(MediaType.APPLICATION_XML)) {
       String xml = resp.readEntity(String.class);
@@ -1283,7 +1282,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       int expectedPriority) throws JSONException {
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     assertEquals(1, json.length(), "incorrect number of elements");
     int responsePriority = json.getInt("priority");
     assertEquals(expectedPriority, responsePriority);
@@ -1311,7 +1310,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       throws JSONException {
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     assertEquals(1, json.length(), "incorrect number of elements");
     String responseQueue = json.getString("queue");
     assertEquals(queue, responseQueue);
@@ -1363,7 +1362,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
               MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
               response.getMediaType().toString());
           JSONObject js =
-              responseToJson(response).getJSONObject("timeouts");
+              response.readEntity(JSONObject.class).getJSONObject("timeouts");
           JSONArray entity = js.getJSONArray("timeout");
           verifyAppTimeoutJson(entity.getJSONObject(0),
               ApplicationTimeoutType.LIFETIME, "UNLIMITED", -1);
@@ -1440,7 +1439,7 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
       throws JSONException {
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject jsonTimeout = responseToJson(response);
+    JSONObject jsonTimeout = response.readEntity(JSONObject.class);
     assertEquals(1, jsonTimeout.length(), "incorrect number of elements");
     JSONObject json = jsonTimeout.getJSONObject("timeout");
     verifyAppTimeoutJson(json, type, expireTime, timeOutFromNow);

@@ -345,15 +345,6 @@ public final class TestWebServiceUtil {
     }
   }
 
-  public static JSONObject responseToJson(Response response) {
-    String res = response.readEntity(String.class);
-    try {
-      return new JSONObject(res);
-    } catch (JSONException e) {
-      throw new RuntimeException("Failed to parse JSON: " + res, e);
-    }
-  }
-
   public static String toEntity(Object obj, Class<?> klass, String mediaType)
       throws Exception {
     if (MediaType.APPLICATION_JSON.equals(mediaType)) {

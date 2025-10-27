@@ -21,8 +21,6 @@ package org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider;
 import javax.ws.rs.core.Feature;
 import javax.ws.rs.core.FeatureContext;
 
-import org.glassfish.jersey.CommonProperties;
-
 /**
  * A JAX-RS {@link Feature} that registers custom MOXy JSON providers
  * for handling serialization and deserialization of JSON with or without
@@ -35,8 +33,6 @@ import org.glassfish.jersey.CommonProperties;
  *
  * <p>Configuration details:</p>
  * <ul>
- *   <li>Disables automatic MOXy JSON feature discovery by setting
- *       {@link org.glassfish.jersey.CommonProperties#MOXY_JSON_FEATURE_DISABLE} to {@code true}.</li>
  *   <li>Registers {@link IncludeRootJSONProvider} with priority {@code 2001}.</li>
  *   <li>Registers {@link ExcludeRootJSONProvider} with priority {@code 2002}.</li>
  * </ul>
@@ -48,16 +44,15 @@ import org.glassfish.jersey.CommonProperties;
 public class JsonProviderFeature implements Feature {
 
   /**
-   * Configures the feature by registering the custom JSON providers
-   * and disabling MOXy auto-discovery.
+   * Configures the feature by registering the custom JSON providers.
    *
    * @param context the {@link FeatureContext} provided by the JAX-RS runtime
    * @return {@code true} to indicate that the feature was successfully configured
    */
   @Override
   public boolean configure(FeatureContext context) {
-    //Auto discovery should be disabled to ensure the custom providers will be used
-    context.property(CommonProperties.MOXY_JSON_FEATURE_DISABLE, true);
+    // Priorities are used to maintain order between the JSONProviders.
+    // This way, we can improve the determinism of the app.
     context.register(IncludeRootJSONProvider.class, 2001);
     context.register(ExcludeRootJSONProvider.class, 2002);
     return true;

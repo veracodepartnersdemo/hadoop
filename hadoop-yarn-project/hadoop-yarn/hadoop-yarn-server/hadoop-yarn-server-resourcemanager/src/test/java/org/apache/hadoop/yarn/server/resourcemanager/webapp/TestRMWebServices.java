@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -244,7 +243,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -257,7 +256,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -270,7 +269,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -283,7 +282,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -297,7 +296,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -309,7 +308,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterInfo(json);
   }
 
@@ -397,7 +396,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
 
@@ -410,7 +409,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
 
@@ -422,7 +421,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json =responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterMetricsJSON(json);
   }
 
@@ -554,7 +553,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
 
@@ -567,7 +566,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
 
@@ -579,7 +578,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     verifyClusterSchedulerFifo(json);
   }
 
@@ -1091,7 +1090,7 @@ public class TestRMWebServices extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     JSONObject schedulerJson = json.getJSONObject("scheduler");
     verifyClusterSchedulerOverView(schedulerJson, "Fifo Scheduler");
   }

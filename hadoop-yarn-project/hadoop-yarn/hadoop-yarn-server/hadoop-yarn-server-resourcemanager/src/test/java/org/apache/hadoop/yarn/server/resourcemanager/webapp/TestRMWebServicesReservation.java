@@ -19,7 +19,6 @@
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.fromJson;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.apache.hadoop.yarn.webapp.WebServicesTestUtils.assertResponseStatusCode;
@@ -1037,7 +1036,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
 
     assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject json = responseToJson(response).getJSONObject("new-reservation");
+    JSONObject json = response.readEntity(JSONObject.class).getJSONObject("new-reservation");
 
     assertEquals(1, json.length(), "incorrect number of elements");
     ReservationId rid = null;
@@ -1204,7 +1203,7 @@ public class TestRMWebServicesReservation extends JerseyTestBase {
         response.getMediaType().toString());
     assertResponseStatusCode(status, response.getStatusInfo());
 
-    return responseToJson(response);
+    return response.readEntity(JSONObject.class);
   }
 
   private void verifyReservationCount(int count) throws Exception {

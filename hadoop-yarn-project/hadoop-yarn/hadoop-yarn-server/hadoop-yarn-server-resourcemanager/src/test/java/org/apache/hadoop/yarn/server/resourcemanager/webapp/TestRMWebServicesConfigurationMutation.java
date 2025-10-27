@@ -72,7 +72,6 @@ import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.C
 import static org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration.MAXIMUM_CAPACITY;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.getCapacitySchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.backupSchedulerConfigFileInTarget;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.restoreSchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -206,7 +205,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
             .request(MediaType.APPLICATION_JSON)
             .get(Response.class);
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     JSONArray items = (JSONArray) json.get("property");
     CapacitySchedulerConfiguration parsedConf =
         new CapacitySchedulerConfiguration();
@@ -273,7 +272,7 @@ public class TestRMWebServicesConfigurationMutation extends JerseyTestBase {
         .request(MediaType.APPLICATION_JSON).get(Response.class);
     assertEquals(Status.OK.getStatusCode(), response.getStatus());
 
-    JSONObject json = responseToJson(response).
+    JSONObject json = response.readEntity(JSONObject.class).
         getJSONObject("configversion");
     return Long.parseLong(json.get("versionID").toString());
   }

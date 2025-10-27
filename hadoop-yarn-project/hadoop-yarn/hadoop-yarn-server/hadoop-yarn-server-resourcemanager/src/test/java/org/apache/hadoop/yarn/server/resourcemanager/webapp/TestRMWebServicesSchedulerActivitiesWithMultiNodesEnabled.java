@@ -82,7 +82,6 @@ import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTes
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyNumberOfAllocationAttempts;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyNumberOfAllocations;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.ActivitiesTestUtils.verifyStateOfAllocations;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -218,7 +217,7 @@ public class TestRMWebServicesSchedulerActivitiesWithMultiNodesEnabled
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = responseToJson(response);
+      JSONObject json = response.readEntity(JSONObject.class);
 
       verifyNumberOfAllocations(json, 1);
 
@@ -262,7 +261,7 @@ public class TestRMWebServicesSchedulerActivitiesWithMultiNodesEnabled
           MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = responseToJson(response);
+      JSONObject json = response.readEntity(JSONObject.class);
 
       verifyNumberOfAllocations(json, 1);
       JSONObject allocation = getFirstSubNodeFromJson(json,
@@ -376,7 +375,7 @@ public class TestRMWebServicesSchedulerActivitiesWithMultiNodesEnabled
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      JSONObject json = responseToJson(response);
+      JSONObject json = response.readEntity(JSONObject.class);
       assertEquals("waiting for next allocation",
           json.getJSONObject(FN_SCHEDULER_ACT_ROOT).getString("diagnostic"));
 
@@ -390,7 +389,7 @@ public class TestRMWebServicesSchedulerActivitiesWithMultiNodesEnabled
               .request(MediaType.APPLICATION_JSON).get(Response.class);
       assertEquals(MediaType.APPLICATION_JSON_TYPE + ";" + JettyUtils.UTF_8,
           response.getMediaType().toString());
-      json = responseToJson(response);
+      json = response.readEntity(JSONObject.class);
 
       //Check app activities
       verifyNumberOfAllocations(json, 1);

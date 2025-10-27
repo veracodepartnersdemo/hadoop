@@ -18,7 +18,6 @@
 
 package org.apache.hadoop.yarn.server.resourcemanager.webapp;
 
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.toJson;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -619,7 +618,7 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
       String expectedMessage)
       throws JSONException {
     assertEquals(BAD_REQUEST_CODE, response.getStatus());
-    JSONObject msg = responseToJson(response);
+    JSONObject msg = response.readEntity(JSONObject.class);
     JSONObject exception = msg.getJSONObject("RemoteException");
     String message = exception.getString("message");
     assertEquals(3, exception.length(), "incorrect number of elements");

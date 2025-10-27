@@ -168,7 +168,6 @@ public class TestRMWithCSRFFilter extends JerseyTestBase {
     assertEquals(MediaType.APPLICATION_XML_TYPE + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
     String xml = response.readEntity(String.class);
-    System.err.println(xml);
     verifyClusterInfoXML(xml);
   }
 

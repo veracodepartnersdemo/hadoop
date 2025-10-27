@@ -67,6 +67,9 @@
     <!-- jersey version -->
     <jersey2.version>2.46</jersey2.version>
 
+    <!-- eclipse persistence -->
+    <eclipse-persistence.version>2.7.14</eclipse-persistence.version>
+
     <!-- jaxb version -->
     <jaxb.version>2.3.9</jaxb.version>
 
@@ -2147,9 +2150,9 @@
         <version>${jersey2.version}</version>
       </dependency>
       <dependency>
-        <groupId>org.glassfish.jersey.media</groupId>
-        <artifactId>jersey-media-moxy</artifactId>
-        <version>${jersey2.version}</version>
+        <groupId>org.eclipse.persistence</groupId>
+        <artifactId>org.eclipse.persistence.moxy</artifactId>
+        <version>${eclipse-persistence.version}</version>
       </dependency>
       <dependency>
         <groupId>org.glassfish.jaxb</groupId>

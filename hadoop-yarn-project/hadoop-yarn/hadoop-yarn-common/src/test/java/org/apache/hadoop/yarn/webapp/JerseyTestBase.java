@@ -40,6 +40,6 @@ public abstract class JerseyTestBase extends JerseyTest {
   }
 
   public final WebTarget targetWithJsonObject() {
-    return target();
+    return target().register(new JettisonObjectProvider.App());
   }
 }

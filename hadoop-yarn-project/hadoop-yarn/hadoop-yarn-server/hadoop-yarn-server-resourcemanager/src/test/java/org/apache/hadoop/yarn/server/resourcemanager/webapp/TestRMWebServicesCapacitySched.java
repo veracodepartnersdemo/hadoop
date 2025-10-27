@@ -55,7 +55,6 @@ import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServic
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.assertXmlResponse;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.backupSchedulerConfigFileInTarget;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.createRM;
-import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.responseToJson;
 import static org.apache.hadoop.yarn.server.resourcemanager.webapp.TestWebServiceUtil.restoreSchedulerConfigFileInTarget;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -180,7 +179,7 @@ public class TestRMWebServicesCapacitySched extends JerseyTestBase {
     Response response = targetWithJsonObject().path("ws/v1/cluster/scheduler-overview")
         .request(MediaType.APPLICATION_JSON).get(Response.class);
     assertJsonType(response);
-    JSONObject json = responseToJson(response);
+    JSONObject json = response.readEntity(JSONObject.class);
     JSONObject scheduler = json.getJSONObject("scheduler");
     TestRMWebServices.verifyClusterSchedulerOverView(scheduler, "Capacity Scheduler");
   }
