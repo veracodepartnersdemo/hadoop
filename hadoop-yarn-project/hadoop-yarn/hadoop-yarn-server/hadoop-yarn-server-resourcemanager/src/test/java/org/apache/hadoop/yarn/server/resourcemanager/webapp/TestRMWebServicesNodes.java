@@ -965,7 +965,7 @@ public class TestRMWebServicesNodes extends JerseyTestBase {
         .path("nodes").request("application/json").get(Response.class);
     assertEquals(MediaType.APPLICATION_JSON + ";" + JettyUtils.UTF_8,
         response.getMediaType().toString());
-    JSONObject nodesInfojson = response.readEntity(JSONObject.class);
+    JSONObject nodesInfoJson = response.readEntity(JSONObject.class);
     verifyNodeAllocationTag(nodesInfoJson, expectedAllocationTags);
 
     rm.stop();
