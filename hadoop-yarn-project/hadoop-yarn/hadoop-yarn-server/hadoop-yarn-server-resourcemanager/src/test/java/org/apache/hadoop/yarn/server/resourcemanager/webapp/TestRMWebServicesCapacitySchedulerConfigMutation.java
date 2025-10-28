@@ -36,6 +36,8 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.server.resourcemanager.ResourceManager;
 import org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacitySchedulerConfiguration;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.ExcludeRootJSONProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.IncludeRootJSONProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.dao.QueueConfigInfo;
@@ -157,6 +159,8 @@ public class TestRMWebServicesCapacitySchedulerConfigMutation extends JerseyTest
     updateInfo.getUpdateQueueInfo().add(b);
 
     Response response = target()
+        .register(new IncludeRootJSONProvider())
+        .register(new ExcludeRootJSONProvider())
         .path("ws/v1/cluster/scheduler-conf")
         .queryParam("user.name", userName)
         .request(MediaType.APPLICATION_JSON)

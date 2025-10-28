@@ -60,6 +60,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeLabelsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeToLabelsEntry;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeToLabelsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeToLabelsEntryList;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.ExcludeRootJSONProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.IncludeRootJSONProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
@@ -162,8 +164,10 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
   }
 
   private WebTarget getClusterWebResource() {
-    return targetWithJsonObject().
-        path(PATH_WS).path(PATH_V1).path(PATH_CLUSTER);
+    return targetWithJsonObject()
+        .register(new IncludeRootJSONProvider())
+        .register(new ExcludeRootJSONProvider())
+        .path(PATH_WS).path(PATH_V1).path(PATH_CLUSTER);
   }
 
   private Response get(String path) {

@@ -88,6 +88,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.scheduler.constraint.Alloca
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.NodeInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.ResourceInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.ResourceOptionInfo;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.ExcludeRootJSONProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.IncludeRootJSONProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
 import org.apache.hadoop.yarn.util.Records;
 import org.apache.hadoop.yarn.util.RackResolver;
@@ -96,6 +98,8 @@ import org.apache.hadoop.yarn.util.YarnVersionInfo;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
 import org.apache.hadoop.yarn.webapp.JerseyTestBase;
 import org.apache.hadoop.yarn.webapp.WebServicesTestUtils;
+
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -744,6 +748,8 @@ public class TestRMWebServicesNodes extends JerseyTestBase {
   @Test
   public void testUpdateNodeResource() throws Exception {
     WebTarget r = targetWithJsonObject()
+        .register(new IncludeRootJSONProvider())
+        .register(new ExcludeRootJSONProvider())
         .path(RMWSConsts.RM_WEB_SERVICE_PATH);
 
     r = r.queryParam("user.name", userName);

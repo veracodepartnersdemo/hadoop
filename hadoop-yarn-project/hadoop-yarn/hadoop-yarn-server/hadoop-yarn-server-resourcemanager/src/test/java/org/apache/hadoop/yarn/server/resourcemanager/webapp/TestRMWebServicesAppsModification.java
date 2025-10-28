@@ -104,6 +104,8 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.ApplicationSubmi
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.CredentialsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.LocalResourceInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.LogAggregationContextInfo;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.ExcludeRootJSONProvider;
+import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.IncludeRootJSONProvider;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.jsonprovider.JsonProviderFeature;
 import org.apache.hadoop.yarn.util.Times;
 import org.apache.hadoop.yarn.webapp.GenericExceptionHandler;
@@ -113,6 +115,7 @@ import org.apache.hadoop.yarn.webapp.WebServicesTestUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.glassfish.jersey.jettison.internal.entity.JettisonObjectProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -332,7 +335,10 @@ public class TestRMWebServicesAppsModification extends JerseyTestBase {
   }
 
   private WebTarget constructWebResource(String... paths) {
-    WebTarget r = target();
+    WebTarget r = target()
+        .register(JettisonObjectProvider.App.class)
+        .register(new IncludeRootJSONProvider())
+        .register(new ExcludeRootJSONProvider());
     WebTarget ws = r.path("ws").path("v1").path("cluster");
     return this.constructWebResource(ws, paths);
   }
