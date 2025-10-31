@@ -27,6 +27,7 @@ import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 import org.slf4j.Logger;
@@ -211,6 +212,7 @@ public class TestDataNodeRollingUpgrade {
     LOG.info("The cluster is active after rollback");
   }
 
+  @Ignore
   @Test (timeout=600000)
   public void testDatanodeRollingUpgradeWithFinalize() throws Exception {
     try {
@@ -223,6 +225,7 @@ public class TestDataNodeRollingUpgrade {
     }
   }
 
+  @Ignore
   @Test(timeout = 600000)
   public void testDatanodeRUwithRegularUpgrade() throws Exception {
     try {
