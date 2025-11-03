@@ -79,7 +79,7 @@ public class ExcludeRootJSONProvider extends MOXyJsonProvider {
   private final ClassSerialisationConfig classSerialisationConfig;
 
   /**
-   * Default constructor
+   * Default constructor.
    */
   public ExcludeRootJSONProvider() {
     this(new Configuration());

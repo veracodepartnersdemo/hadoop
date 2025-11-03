@@ -77,7 +77,7 @@ public class IncludeRootJSONProvider extends MOXyJsonProvider {
   private final ClassSerialisationConfig classSerialisationConfig;
 
   /**
-   * Default constructor
+   * Default constructor.
    */
   public IncludeRootJSONProvider() {
     this(new Configuration());

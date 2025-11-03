@@ -214,7 +214,7 @@ public class TestRMWebServicesNodeLabels extends JerseyTestBase {
     }
     Entity<String> entity = payload == null
         ? null
-        : Entity.entity(toJson(payload, payloadClass) ,MediaType.APPLICATION_JSON);
+        : Entity.entity(toJson(payload, payloadClass), MediaType.APPLICATION_JSON);
 
     return webTarget.request(MediaType.APPLICATION_JSON).post(entity, Response.class);
   }
