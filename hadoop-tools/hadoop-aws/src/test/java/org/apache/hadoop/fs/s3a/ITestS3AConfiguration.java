@@ -598,7 +598,11 @@ public class ITestS3AConfiguration extends AbstractHadoopTestBase {
   public void testConfOptionPropagationToFS() throws Exception {
     Configuration config = new Configuration();
     String testFSName = config.getTrimmed(TEST_FS_S3A_NAME, "");
-    String bucket = new URI(testFSName).getHost();
+    URI uri = new URI(testFSName);
+    String bucket = uri.getHost();
+    if (bucket == null) {
+      bucket = uri.getAuthority();
+    }
     setBucketOption(config, bucket, "propagation", "propagated");
     fs = S3ATestUtils.createTestFileSystem(config);
     Configuration updated = fs.getConf();
