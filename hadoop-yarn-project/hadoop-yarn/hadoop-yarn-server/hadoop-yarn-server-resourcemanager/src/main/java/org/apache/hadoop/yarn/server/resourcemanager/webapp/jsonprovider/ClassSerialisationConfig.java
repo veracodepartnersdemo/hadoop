@@ -82,6 +82,7 @@ import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.SchedulerTypeInf
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.StatisticsItemInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.UserMetricsInfo;
 import org.apache.hadoop.yarn.server.resourcemanager.webapp.dao.UsersInfo;
+import org.apache.hadoop.yarn.server.webapp.dao.ContainerInfo;
 import org.apache.hadoop.yarn.webapp.RemoteExceptionData;
 import org.apache.hadoop.yarn.webapp.dao.ConfInfo;
 import org.apache.hadoop.yarn.webapp.dao.SchedConfUpdateInfo;
@@ -148,14 +149,15 @@ public class ClassSerialisationConfig {
           AppTimeoutInfo.class, AppTimeoutsInfo.class, BulkActivitiesInfo.class,
           CapacitySchedulerHealthInfo.class, CapacitySchedulerInfo.class,
           CapacitySchedulerQueueInfo.class, CapacitySchedulerQueueInfoList.class, ClusterInfo.class,
-          ClusterMetricsInfo.class, ConfigVersionInfo.class, FairSchedulerQueueInfoList.class,
-          FifoSchedulerInfo.class, NewReservation.class, NodeInfo.class, NodesInfo.class,
-          QueueAclInfo.class, QueueAclsInfo.class, RemoteExceptionData.class,
-          ReservationDeleteRequestInfo.class, ReservationDeleteResponseInfo.class,
-          ReservationSubmissionRequestInfo.class, ReservationUpdateRequestInfo.class,
-          ReservationUpdateResponseInfo.class, ResourceInfo.class, ResourceInformationsInfo.class,
-          SchedulerInfo.class, SchedulerOverviewInfo.class, SchedulerTypeInfo.class,
-          StatisticsItemInfo.class, UserInfo.class, UserMetricsInfo.class, UsersInfo.class);
+          ClusterMetricsInfo.class, ConfigVersionInfo.class, ContainerInfo.class,
+          FairSchedulerQueueInfoList.class, FifoSchedulerInfo.class, NewReservation.class,
+          NodeInfo.class, NodesInfo.class, QueueAclInfo.class, QueueAclsInfo.class,
+          RemoteExceptionData.class, ReservationDeleteRequestInfo.class,
+          ReservationDeleteResponseInfo.class, ReservationSubmissionRequestInfo.class,
+          ReservationUpdateRequestInfo.class, ReservationUpdateResponseInfo.class,
+          ResourceInfo.class, ResourceInformationsInfo.class, SchedulerInfo.class,
+          SchedulerOverviewInfo.class, SchedulerTypeInfo.class, StatisticsItemInfo.class,
+          UserInfo.class, UserMetricsInfo.class, UsersInfo.class);
 
   private static final Set<Class<?>> CONST_UNWRAPPED_CLASSES =
       Sets.newHashSet(ApplicationSubmissionContextInfo.class, AppPriority.class, AppQueue.class,
