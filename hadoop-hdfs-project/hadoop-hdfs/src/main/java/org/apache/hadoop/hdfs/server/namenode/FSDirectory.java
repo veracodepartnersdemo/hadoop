@@ -159,7 +159,7 @@ public class FSDirectory implements Closeable {
   private final FSNamesystem namesystem;
   private volatile boolean skipQuotaCheck = false; //skip while consuming edits
   private final int maxComponentLength;
-  private int maxDirItems;
+  private volatile int maxDirItems;
   private final int lsLimit;  // max list limit
   private final int contentCountLimit; // max content summary counts per run
   private final long contentSleepMicroSec;
@@ -217,7 +217,7 @@ public class FSDirectory implements Closeable {
   // authorizeWithContext() API or not.
   private boolean useAuthorizationWithContextAPI = false;
 
-  private final int MAX_DIR_ITEMS = 64 * 100 * 1000;
+  private static final int maxDirItemsLimit = 64 * 100 * 1000;
 
   public void setINodeAttributeProvider(
       @Nullable INodeAttributeProvider provider) {
@@ -401,9 +401,9 @@ public class FSDirectory implements Closeable {
     // to 64MB. This means we can only store approximately 6.7 million entries
     // per directory, but let's use 6.4 million for some safety.
     Preconditions.checkArgument(
-        maxDirItems > 0 && maxDirItems <= MAX_DIR_ITEMS, "Cannot set "
+        maxDirItems > 0 && maxDirItems <= maxDirItemsLimit, "Cannot set "
             + DFSConfigKeys.DFS_NAMENODE_MAX_DIRECTORY_ITEMS_KEY
-            + " to a value less than 1 or greater than " + MAX_DIR_ITEMS);
+            + " to a value less than 1 or greater than " + maxDirItemsLimit);
 
     int threshold = conf.getInt(
         DFSConfigKeys.DFS_NAMENODE_NAME_CACHE_THRESHOLD_KEY,
@@ -583,9 +583,9 @@ public class FSDirectory implements Closeable {
 
   public void setMaxDirItems(int newVal) {
     com.google.common.base.Preconditions.checkArgument(
-        newVal > 0 && newVal <= MAX_DIR_ITEMS, "Cannot set "
+        newVal > 0 && newVal <= maxDirItemsLimit, "Cannot set "
             + DFSConfigKeys.DFS_NAMENODE_MAX_DIRECTORY_ITEMS_KEY
-            + " to a value less than 1 or greater than " + MAX_DIR_ITEMS);
+            + " to a value less than 1 or greater than " + maxDirItemsLimit);
     maxDirItems = newVal;
   }
 

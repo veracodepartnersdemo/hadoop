@@ -1252,6 +1252,7 @@ public class TestDFSAdmin {
         any(Configuration.class))).thenReturn(changes);
 
     int result = admin.startReconfiguration("datanode", "livenodes");
+    Thread.sleep(1000);
     assertThat(result).isEqualTo(0);
     final List<String> outsForStartReconf = new ArrayList<>();
     final List<String> errsForStartReconf = new ArrayList<>();
