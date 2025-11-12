@@ -113,6 +113,7 @@ public class AliyunOSSFileSystemStore {
     clientConf.setUserAgent(
         conf.get(USER_AGENT_PREFIX, USER_AGENT_PREFIX_DEFAULT) + ", Hadoop/"
             + VersionInfo.getVersion());
+    clientConf.setSupportCname(conf.getBoolean(CNAME_SUPPORT_KEY, CNAME_SUPPORT_DEFAULT));
 
     String region = conf.get(REGION_KEY, "");
     String signatureVersion = conf.get(SIGNATURE_VERSION_KEY, SIGNATURE_VERSION_DEFAULT);
