@@ -17,6 +17,7 @@
 
 package org.apache.hadoop.yarn.server.federation.policies.amrmproxy;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,10 +47,11 @@ public interface FederationAMRMProxyPolicy
    *         list of {@link ResourceRequest}s that should be forwarded to it
    * @throws YarnException in case the request is malformed or no viable
    *           sub-clusters can be found.
+   * @throws IOException if no active subclusters.
    */
   Map<SubClusterId, List<ResourceRequest>> splitResourceRequests(
       List<ResourceRequest> resourceRequests,
-      Set<SubClusterId> timedOutSubClusters) throws YarnException;
+      Set<SubClusterId> timedOutSubClusters) throws YarnException, IOException;
 
   /**
    * This method should be invoked to notify the policy about responses being

@@ -17,6 +17,7 @@
 
 package org.apache.hadoop.yarn.server.federation.policies.router;
 
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.hadoop.yarn.api.protocolrecords.ReservationSubmissionRequest;
@@ -46,10 +47,11 @@ public interface FederationRouterPolicy extends ConfigurableFederationPolicy {
    *         application.
    *
    * @throws YarnException if the policy cannot determine a viable subcluster.
+   * @throws IOException if no active subclusters.
    */
   SubClusterId getHomeSubcluster(
       ApplicationSubmissionContext appSubmissionContext,
-      List<SubClusterId> blackListSubClusters) throws YarnException;
+      List<SubClusterId> blackListSubClusters) throws YarnException, IOException;
 
   /**
    * Determines the sub-cluster where a ReservationSubmissionRequest should be
@@ -59,7 +61,8 @@ public interface FederationRouterPolicy extends ConfigurableFederationPolicy {
    * @return a mapping of sub-clusters and the requests
    *
    * @throws YarnException if the policy fails to choose a sub-cluster
+   * @throws IOException if no active subclusters.
    */
   SubClusterId getReservationHomeSubcluster(
-      ReservationSubmissionRequest request) throws YarnException;
+      ReservationSubmissionRequest request) throws YarnException, IOException;
 }

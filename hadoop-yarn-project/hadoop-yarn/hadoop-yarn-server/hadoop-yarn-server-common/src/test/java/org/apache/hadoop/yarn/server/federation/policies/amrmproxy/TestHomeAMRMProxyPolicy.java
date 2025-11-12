@@ -25,16 +25,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.test.GenericTestUtils;
 import org.apache.hadoop.yarn.api.records.ResourceRequest;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.federation.policies.BaseFederationPoliciesTest;
 import org.apache.hadoop.yarn.server.federation.policies.dao.WeightedPolicyInfo;
-import org.apache.hadoop.yarn.server.federation.policies.exceptions.FederationPolicyException;
 import org.apache.hadoop.yarn.server.federation.store.records.SubClusterId;
 import org.apache.hadoop.yarn.server.federation.store.records.SubClusterIdInfo;
 import org.apache.hadoop.yarn.server.federation.store.records.SubClusterInfo;
@@ -72,7 +73,7 @@ public class TestHomeAMRMProxyPolicy extends BaseFederationPoliciesTest {
   }
 
   @Test
-  public void testSplitAllocateRequest() throws YarnException {
+  public void testSplitAllocateRequest() throws YarnException, IOException {
 
     // Verify the request only goes to the home subcluster
     String[] hosts = new String[] {"host0", "host1", "host2", "host3"};
@@ -89,7 +90,7 @@ public class TestHomeAMRMProxyPolicy extends BaseFederationPoliciesTest {
   }
 
   @Test
-  public void testHomeSubclusterNotActive() throws YarnException {
+  public void testHomeSubclusterNotActive() throws YarnException, IOException {
 
     // We setup the home subcluster to a non-existing one
     initializePolicyContext(getPolicy(), mock(WeightedPolicyInfo.class),
@@ -104,7 +105,7 @@ public class TestHomeAMRMProxyPolicy extends BaseFederationPoliciesTest {
       federationPolicy.splitResourceRequests(resourceRequests,
           new HashSet<SubClusterId>());
       fail("It should fail when the home subcluster is not active");
-    } catch(FederationPolicyException e) {
+    } catch(RetriableException e) {
       GenericTestUtils.assertExceptionContains("is not active", e);
     }
   }

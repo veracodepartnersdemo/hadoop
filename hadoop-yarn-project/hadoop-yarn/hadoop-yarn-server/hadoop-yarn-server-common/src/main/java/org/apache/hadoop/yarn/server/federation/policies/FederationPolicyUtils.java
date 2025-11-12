@@ -17,6 +17,7 @@
 
 package org.apache.hadoop.yarn.server.federation.policies;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -25,10 +26,10 @@ import java.util.Random;
 
 import org.apache.hadoop.classification.InterfaceAudience.Private;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.ipc.RetriableException;
 import org.apache.hadoop.yarn.conf.YarnConfiguration;
 import org.apache.hadoop.yarn.exceptions.YarnException;
 import org.apache.hadoop.yarn.server.federation.policies.amrmproxy.FederationAMRMProxyPolicy;
-import org.apache.hadoop.yarn.server.federation.policies.exceptions.FederationPolicyException;
 import org.apache.hadoop.yarn.server.federation.policies.exceptions.FederationPolicyInitializationException;
 import org.apache.hadoop.yarn.server.federation.policies.manager.FederationPolicyManager;
 import org.apache.hadoop.yarn.server.federation.store.records.SubClusterId;
@@ -185,12 +186,12 @@ public final class FederationPolicyUtils {
    * @param blackListSubClusters the list of subClusters as identified by
    *          {@link SubClusterId} to blackList from the selection of the home
    *          subCluster.
-   * @throws FederationPolicyException if there are no usable subclusters.
+   * @throws IOException if there are no usable subclusters.
    */
   public static void validateSubClusterAvailability(
       Collection<SubClusterId> activeSubClusters,
       Collection<SubClusterId> blackListSubClusters)
-      throws FederationPolicyException {
+      throws IOException {
     if (activeSubClusters != null && !activeSubClusters.isEmpty()) {
       if (blackListSubClusters == null) {
         return;
@@ -202,7 +203,7 @@ public final class FederationPolicyUtils {
         }
       }
     }
-    throw new FederationPolicyException(
+    throw new RetriableException(
         FederationPolicyUtils.NO_ACTIVE_SUBCLUSTER_AVAILABLE);
   }
 
