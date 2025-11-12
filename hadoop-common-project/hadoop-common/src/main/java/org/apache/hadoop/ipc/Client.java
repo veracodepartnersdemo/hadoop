@@ -1519,10 +1519,12 @@ public class Client implements AutoCloseable {
     final Connection connection = getConnection(remoteId, call, serviceClass,
         fallbackToSimpleAuth);
 
+    boolean success = false;
     try {
       checkAsyncCall();
       try {
         connection.sendRpcRequest(call);                 // send the rpc request
+        success = true;
       } catch (RejectedExecutionException e) {
         throw new IOException("connection has been closed", e);
       } catch (InterruptedException ie) {
@@ -1537,6 +1539,10 @@ public class Client implements AutoCloseable {
         releaseAsyncCall();
       }
       throw e;
+    } finally {
+      if (!success) {
+        connection.calls.remove(call.id);
+      }
     }
 
     if (isAsynchronousMode()) {
