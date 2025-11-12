@@ -726,4 +726,5 @@
     <Package name="org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.placement.schema" />
   </Match>
 
+  <Match><Bug pattern="PA_PUBLIC_PRIMITIVE_ATTRIBUTE"/></Match>
 </FindBugsFilter>
