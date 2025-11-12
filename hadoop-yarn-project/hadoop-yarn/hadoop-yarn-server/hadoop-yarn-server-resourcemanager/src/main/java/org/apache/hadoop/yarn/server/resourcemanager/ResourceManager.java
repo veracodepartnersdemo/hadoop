@@ -190,6 +190,11 @@ public class ResourceManager extends CompositeService
    */
   public static final String UI2_WEBAPP_NAME = "/ui2";
 
+  /*
+   * Scheduler UI webapp name
+   */
+  public static final String SCHEDULER_UI_WEBAPP_NAME = "/scheduler-ui";
+
   /**
    * "Always On" services. Services that need to run always irrespective of
    * the HA state of the RM.
@@ -1479,6 +1484,38 @@ public class ResourceManager extends CompositeService
       }
     }
 
+    WebAppContext schedulerUiWebAppContext = null;
+    if (getConfig().getBoolean(YarnConfiguration.YARN_WEBAPP_SCHEDULER_UI_ENABLE,
+        YarnConfiguration.DEFAULT_YARN_WEBAPP_SCHEDULER_UI_ENABLE)) {
+      String onDiskPath = getConfig()
+          .get(YarnConfiguration.YARN_WEBAPP_SCHEDULER_UI_WARFILE_PATH);
+
+      schedulerUiWebAppContext = new WebAppContext();
+      schedulerUiWebAppContext.setContextPath(SCHEDULER_UI_WEBAPP_NAME);
+
+      if (onDiskPath == null) {
+        String war = "hadoop-yarn-capacity-scheduler-ui-" + VersionInfo.getVersion() + ".war";
+        URL url = getClass().getClassLoader().getResource(war);
+
+        if (url == null) {
+          onDiskPath = getWebAppsPath("scheduler-ui");
+        } else {
+          onDiskPath = url.getFile();
+        }
+      }
+      if (onDiskPath == null || onDiskPath.isEmpty()) {
+          LOG.error("No war file or webapps found for scheduler-ui !");
+      } else {
+        if (onDiskPath.endsWith(".war")) {
+          schedulerUiWebAppContext.setWar(onDiskPath);
+          LOG.info("Using war file at: {}.", onDiskPath);
+        } else {
+          schedulerUiWebAppContext.setResourceBase(onDiskPath);
+          LOG.info("Using webapps at: {}.", onDiskPath);
+        }
+      }
+    }
+
     builder.withAttribute(IsResourceManagerActiveServlet.RM_ATTRIBUTE, this);
     builder.withServlet(IsResourceManagerActiveServlet.SERVLET_NAME,
         IsResourceManagerActiveServlet.PATH_SPEC,
@@ -1487,7 +1524,7 @@ public class ResourceManager extends CompositeService
     try {
       RMWebApp rmWebApp = new RMWebApp(this);
       builder.withResourceConfig(rmWebApp.resourceConfig());
-      webApp = builder.start(rmWebApp, uiWebAppContext);
+      webApp = builder.start(rmWebApp, uiWebAppContext, schedulerUiWebAppContext);
     } catch (WebAppException e) {
       webApp = e.getWebApp();
       throw e;
