@@ -27,6 +27,8 @@ import org.apache.hadoop.classification.VisibleForTesting;
 import org.apache.hadoop.fs.azurebfs.services.AbfsBackoffMetrics;
 import org.apache.hadoop.fs.azurebfs.services.AbfsCounters;
 import org.apache.hadoop.fs.azurebfs.services.AbfsReadFooterMetrics;
+import org.apache.hadoop.fs.azurebfs.services.AbfsReadThreadPoolMetrics;
+import org.apache.hadoop.fs.azurebfs.services.AbfsWriteThreadPoolMetrics;
 import org.apache.hadoop.fs.azurebfs.utils.MetricFormat;
 import org.apache.hadoop.fs.statistics.DurationTracker;
 import org.apache.hadoop.fs.statistics.IOStatistics;
@@ -106,6 +108,10 @@ public class AbfsCountersImpl implements AbfsCounters {
 
   private AbfsReadFooterMetrics abfsReadFooterMetrics = null;
 
+  private AbfsWriteThreadPoolMetrics abfsWriteThreadPoolMetrics = null;
+
+  private AbfsReadThreadPoolMetrics abfsReadThreadPoolMetrics = null;
+
   private AtomicLong lastExecutionTime = null;
 
   private static final AbfsStatistic[] STATISTIC_LIST = {
@@ -168,6 +174,31 @@ public class AbfsCountersImpl implements AbfsCounters {
     ioStatisticsStore = ioStatisticsStoreBuilder.build();
     lastExecutionTime = new AtomicLong(now());
   }
+
+  /**
+   * Initializes the metrics collector for the read thread pool.
+   * <p>
+   * This method creates a new instance of {@link AbfsReadThreadPoolMetrics}
+   * to track performance statistics and operational metrics related to
+   * read operations executed by the thread pool.
+   * </p>
+   */
+  public void initializeReadMetrics() {
+    abfsReadThreadPoolMetrics = new AbfsReadThreadPoolMetrics();
+  }
+
+  /**
+   * Initializes the metrics collector for the write thread pool.
+   * <p>
+   * This method creates a new instance of {@link AbfsWriteThreadPoolMetrics}
+   * to track performance statistics and operational metrics related to
+   * write operations executed by the thread pool.
+   * </p>
+   */
+  public void initializeWriteMetrics() {
+    abfsWriteThreadPoolMetrics = new AbfsWriteThreadPoolMetrics();
+  }
+
 
   @Override
   public void initializeMetrics(MetricFormat metricFormat) {
@@ -265,6 +296,22 @@ public class AbfsCountersImpl implements AbfsCounters {
   @Override
   public AbfsReadFooterMetrics getAbfsReadFooterMetrics() {
     return abfsReadFooterMetrics != null ? abfsReadFooterMetrics : null;
+  }
+
+  /**
+   * Returns the write thread pool metrics instance, or {@code null} if uninitialized.
+   */
+  @Override
+  public AbfsWriteThreadPoolMetrics getAbfsWriteThreadPoolMetrics() {
+    return abfsWriteThreadPoolMetrics != null ? abfsWriteThreadPoolMetrics : null;
+  }
+
+  /**
+   * Returns the read thread pool metrics instance, or {@code null} if uninitialized.
+   */
+  @Override
+  public AbfsReadThreadPoolMetrics getAbfsReadThreadPoolMetrics() {
+    return abfsReadThreadPoolMetrics != null ? abfsReadThreadPoolMetrics : null;
   }
 
   /**

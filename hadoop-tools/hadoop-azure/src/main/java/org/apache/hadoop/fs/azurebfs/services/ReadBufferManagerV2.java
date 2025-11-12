@@ -46,7 +46,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.apache.hadoop.fs.azurebfs.utils.TracingContext;
 import org.apache.hadoop.classification.VisibleForTesting;
 
+import static org.apache.hadoop.fs.azurebfs.constants.FileSystemConfigurations.BYTES_PER_GIGABYTE;
+import static org.apache.hadoop.fs.azurebfs.constants.FileSystemConfigurations.HUNDRED;
 import static org.apache.hadoop.fs.azurebfs.constants.FileSystemConfigurations.HUNDRED_D;
+import static org.apache.hadoop.fs.azurebfs.constants.FileSystemConfigurations.ZERO;
+import static org.apache.hadoop.fs.azurebfs.constants.FileSystemConfigurations.ZERO_D;
 
 /**
  * The Improved Read Buffer Manager for Rest AbfsClient.
@@ -104,14 +108,35 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
 
   private static AtomicBoolean isConfigured = new AtomicBoolean(false);
 
+  /* Metrics collector for monitoring the performance of the ABFS read thread pool.  */
+  private final AbfsReadThreadPoolMetrics readThreadPoolMetrics;
+
+  /* Last recorded CPU time used for computing CPU utilization deltas.  */
+  private static long lastCpuTime = 0;
+
+  /* Last recorded system time used for utilization calculations.  */
+  private static long lastTime = 0;
+
+  private final AbfsClient abfsClient;
+
   /**
-   * Private constructor to prevent instantiation as this needs to be singleton.
+   * Initializes a new instance of {@code ReadBufferManagerV2} for the given ABFS client.
+   *
+   * @param abfsClient the {@link AbfsClient} used for managing read operations.
    */
-  private ReadBufferManagerV2() {
+  private ReadBufferManagerV2(AbfsClient abfsClient) {
+    this.abfsClient = abfsClient;
+    readThreadPoolMetrics = abfsClient.getAbfsCounters().getAbfsReadThreadPoolMetrics();
     printTraceLog("Creating Read Buffer Manager V2 with HADOOP-18546 patch");
   }
 
-  static ReadBufferManagerV2 getBufferManager() {
+  /**
+   * Returns the singleton instance of {@code ReadBufferManagerV2} for the given ABFS client.
+   *
+   * @param abfsClient the {@link AbfsClient} used for read operations.
+   * @return the singleton instance of {@code ReadBufferManagerV2}.
+   */
+  static ReadBufferManagerV2 getBufferManager(AbfsClient abfsClient) {
     if (!isConfigured.get()) {
       throw new IllegalStateException("ReadBufferManagerV2 is not configured. "
           + "Please call setReadBufferManagerConfigs() before calling getBufferManager().");
@@ -120,7 +145,7 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
       LOCK.lock();
       try {
         if (bufferManager == null) {
-          bufferManager = new ReadBufferManagerV2();
+          bufferManager = new ReadBufferManagerV2(abfsClient);
           bufferManager.init();
           LOGGER.trace("ReadBufferManagerV2 singleton initialized");
         }
@@ -210,7 +235,7 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
         workerThreadFactory);
     workerPool.allowCoreThreadTimeOut(true);
     for (int i = 0; i < minThreadPoolSize; i++) {
-      ReadBufferWorker worker = new ReadBufferWorker(i, getBufferManager());
+      ReadBufferWorker worker = new ReadBufferWorker(i, getBufferManager(abfsClient));
       workerRefs.add(worker);
       workerPool.submit(worker);
     }
@@ -844,10 +869,14 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
                   / HUNDRED_D));
       // Create new Worker Threads
       for (int i = currentPoolSize; i < newThreadPoolSize; i++) {
-        ReadBufferWorker worker = new ReadBufferWorker(i, getBufferManager());
+        ReadBufferWorker worker = new ReadBufferWorker(i, getBufferManager(abfsClient));
         workerRefs.add(worker);
         workerPool.submit(worker);
       }
+      // Capture the latest thread pool statistics (pool size, CPU, memory, etc.)
+      ReadThreadPoolStats stats = getCurrentStats();
+      // Update the read thread pool metrics with the latest statistics snapshot.
+      readThreadPoolMetrics.update(stats);
       printTraceLog("Increased worker pool size from {} to {}", currentPoolSize,
           newThreadPoolSize);
     } else if (cpuLoad > cpuThreshold || currentPoolSize > requiredPoolSize) {
@@ -860,6 +889,10 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
         ReadBufferWorker worker = workerRefs.remove(workerRefs.size() - 1);
         worker.stop();
       }
+      // Capture the latest thread pool statistics (pool size, CPU, memory, etc.)
+      ReadThreadPoolStats stats = getCurrentStats();
+      // Update the read thread pool metrics with the latest statistics snapshot.
+      readThreadPoolMetrics.update(stats);
       printTraceLog("Decreased worker pool size from {} to {}", currentPoolSize,
           newThreadPoolSize);
     } else {
@@ -1006,6 +1039,22 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
   }
 
   /**
+   * Calculates the available heap memory in gigabytes.
+   * This method uses {@link Runtime#getRuntime()} to obtain the maximum heap memory
+   * allowed for the JVM and subtracts the currently used memory (total - free)
+   * to determine how much heap memory is still available.
+   * The result is rounded up to the nearest gigabyte.
+   *
+   * @return the available heap memory in gigabytes
+   */
+  private long getAvailableHeapMemory() {
+    MemoryMXBean osBean = ManagementFactory.getMemoryMXBean();
+    MemoryUsage memoryUsage = osBean.getHeapMemoryUsage();
+    long availableHeapBytes = memoryUsage.getMax() - memoryUsage.getUsed();
+    return (availableHeapBytes + BYTES_PER_GIGABYTE - 1) / BYTES_PER_GIGABYTE;
+  }
+
+  /**
    * Get the current CPU load of the system.
    * @return the CPU load as a double value between 0.0 and 1.0
    */
@@ -1019,6 +1068,30 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
       return 0.0;
     }
     return cpuLoad;
+  }
+
+  /**
+   * Returns the CPU utilization of the JVM process as a percentage (0–100).
+   */
+  public static double getJvmCpuUtilization() {
+    OperatingSystemMXBean osBean =
+        (OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean();
+    long cpuTime = osBean.getProcessCpuTime();
+    long now = System.nanoTime();
+    if (lastTime == ZERO) {
+      lastCpuTime = cpuTime;
+      lastTime = now;
+      return 0.0; // first call has no previous data
+    }
+    long elapsedCpu = cpuTime - lastCpuTime;
+    long elapsedTime = now - lastTime;
+    lastCpuTime = cpuTime;
+    lastTime = now;
+    if (elapsedTime <= ZERO) {
+      return ZERO_D;
+    }
+    double load = (elapsedCpu * HUNDRED_D) / (elapsedTime * osBean.getAvailableProcessors());
+    return Math.max(ZERO_D, Math.min(load, HUNDRED_D));
   }
 
   @VisibleForTesting
@@ -1095,5 +1168,99 @@ public final class ReadBufferManagerV2 extends ReadBufferManager {
 
   private void decrementActiveBufferCount() {
     numberOfActiveBuffers.getAndDecrement();
+  }
+
+  /**
+   * Represents current statistics of the read thread pool and system.
+   */
+  public static class ReadThreadPoolStats {
+    private final int currentPoolSize;   // matches CURRENT_POOL_SIZE metric
+    private final int maxPoolSize;       // matches MAX_POOL_SIZE metric
+    private final int activeThreads;     // matches ACTIVE_THREADS metric
+    private final double jvmCpuUtilization; // matches JVM_CPU_UTILIZATION metric
+    private final double cpuUtilization; // matches CPU_UTILIZATION metric
+    private final long availableHeapGB;  // matches MEMORY_UTILIZATION metric
+
+    /**
+     * Constructs an instance of {@code ReadThreadPoolStats} to capture the current
+     * state and performance metrics of the read thread pool.
+     *
+     * @param currentPoolSize     the current number of threads in the pool
+     * @param maxPoolSize         the maximum number of threads allowed in the pool
+     * @param activeThreads       the number of threads currently executing tasks
+     * @param jvmCpuUtilization   the overall JVM CPU utilization percentage
+     * @param cpuUtilization      the process-level CPU utilization percentage
+     * @param availableHeapGB     the currently available heap memory in gigabytes
+     */
+    public ReadThreadPoolStats(int currentPoolSize, int maxPoolSize,
+        int activeThreads, double jvmCpuUtilization, double cpuUtilization, long availableHeapGB) {
+      this.currentPoolSize = currentPoolSize;
+      this.maxPoolSize = maxPoolSize;
+      this.activeThreads = activeThreads;
+      this.jvmCpuUtilization = jvmCpuUtilization;
+      this.cpuUtilization = cpuUtilization;
+      this.availableHeapGB = availableHeapGB;
+    }
+
+    /** @return the current number of threads in the pool. */
+    public int getCurrentPoolSize() {
+      return currentPoolSize;
+    }
+
+    /** @return the maximum allowed size of the thread pool. */
+    public int getMaxPoolSize() {
+      return maxPoolSize;
+    }
+
+    /** @return the number of threads currently executing tasks. */
+    public int getActiveThreads() {
+      return activeThreads;
+    }
+
+    /** @return the JVM process CPU utilization percentage. */
+    public double getJvmCpuUtilization() {
+      return jvmCpuUtilization;
+    }
+
+    /** @return the overall system CPU utilization percentage. */
+    public double getCpuUtilization() {
+      return cpuUtilization;
+    }
+
+    /** @return the available heap memory in gigabytes. */
+    public long getMemoryUtilization() {
+      return availableHeapGB;
+    }
+
+    @Override
+    public String toString() {
+      return String.format(
+          "currentPoolSize=%d, maxPoolSize=%d, activeThreads=%d, jvmCpuUtilization=%.2f%%, cpuUtilization=%.2f%%, availableHeap=%dGB",
+          currentPoolSize, maxPoolSize, activeThreads, jvmCpuUtilization,  cpuUtilization * HUNDRED, availableHeapGB);
+    }
+  }
+
+  /**
+   * Returns a snapshot of the current thread pool and system resource statistics.
+   * Captures key metrics including thread counts, CPU utilization, and available
+   * heap memory for performance monitoring and dynamic pool sizing decisions.
+   *
+   * @return the latest {@link ReadThreadPoolStats} representing the current state
+   *         of the thread pool and system resources.
+   */
+  synchronized ReadThreadPoolStats getCurrentStats() {
+    if (workerPool == null) {
+      return new ReadThreadPoolStats(ZERO,  ZERO,  ZERO,  ZERO_D,  ZERO_D, ZERO);
+    }
+
+    ThreadPoolExecutor exec = this.workerPool;
+    return new ReadThreadPoolStats(
+        exec.getPoolSize(),         // Current threads in pool (active + idle)
+        exec.getMaximumPoolSize(),  // Max threads allowed in pool
+        exec.getActiveCount(),      // Threads actively executing tasks
+        getJvmCpuUtilization(),     // JVM process CPU usage (%)
+        getCpuLoad(),        // System-wide CPU usage (%)
+        getAvailableHeapMemory()    // Available JVM heap memory (GB)
+    );
   }
 }

@@ -283,8 +283,7 @@ public class AzureBlobFileSystemStore implements Closeable, ListingSupport {
     if (abfsConfiguration.isDynamicWriteThreadPoolEnablement()) {
       this.poolSizeManager = WriteThreadPoolSizeManager.getInstance(
           getClient().getFileSystem() + "-" + UUID.randomUUID(),
-          abfsConfiguration);
-      poolSizeManager.startCPUMonitoring();
+          abfsConfiguration, getClient());
       this.boundedThreadPool = poolSizeManager.getExecutorService();
     } else {
       this.boundedThreadPool = BlockingThreadPoolExecutorService.newInstance(
@@ -822,6 +821,7 @@ public class AzureBlobFileSystemStore implements Closeable, ListingSupport {
             .withPath(path)
             .withExecutorService(new SemaphoredDelegatingExecutor(boundedThreadPool,
                 blockOutputActiveBlocks, true))
+            .withThreadPoolManager(poolSizeManager)
             .withTracingContext(tracingContext)
             .withAbfsBackRef(fsBackRef)
             .withIngressServiceType(abfsConfiguration.getIngressServiceType())

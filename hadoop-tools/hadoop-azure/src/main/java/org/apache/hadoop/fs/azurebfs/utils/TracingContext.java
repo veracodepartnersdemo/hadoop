@@ -227,7 +227,6 @@ public class TracingContext {
           + operatedBlobCount + COLON
           + getOperationSpecificHeader(opType) + COLON
           + httpOperation.getTracingContextSuffix();
-
       metricHeader += !(metricResults.trim().isEmpty()) ? metricResults  : EMPTY_STRING;
       break;
     case TWO_ID_FORMAT:
@@ -244,9 +243,12 @@ public class TracingContext {
     if (listener != null) { //for testing
       listener.callTracingHeaderValidator(header, format);
     }
-    httpOperation.setRequestProperty(HttpHeaderConfigurations.X_MS_CLIENT_REQUEST_ID, header);
+    // If metricHeader is present, append it to the client request ID header for tracing
     if (!metricHeader.equals(EMPTY_STRING)) {
-      httpOperation.setRequestProperty(HttpHeaderConfigurations.X_MS_FECLIENT_METRICS, metricHeader);
+      httpOperation.setRequestProperty(HttpHeaderConfigurations.X_MS_CLIENT_REQUEST_ID, header + COLON + metricHeader);
+    } else {
+      // Otherwise, set only the base header value
+      httpOperation.setRequestProperty(HttpHeaderConfigurations.X_MS_CLIENT_REQUEST_ID, header);
     }
     /*
     * In case the primaryRequestId is an empty-string and if it is the first try to
@@ -397,5 +399,13 @@ public class TracingContext {
    */
   public ReadType getReadType() {
     return readType;
+  }
+
+  /**
+   * Sets the metric results string used for tracing or logging.
+   * @param metricResults the formatted metric data to store.
+   */
+  public void setMetricResults(final String metricResults) {
+    this.metricResults = metricResults;
   }
 }

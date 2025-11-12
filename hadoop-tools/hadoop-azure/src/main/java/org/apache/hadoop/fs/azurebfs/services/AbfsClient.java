@@ -312,8 +312,15 @@ public abstract class AbfsClient implements Closeable {
           metricIdlePeriod,
           metricIdlePeriod);
     }
+    // Initialize write thread pool metrics if dynamic write thread pool scaling is enabled.
+    if (abfsConfiguration.isDynamicWriteThreadPoolEnablement()) {
+      abfsCounters.initializeWriteMetrics();
+    }
     this.abfsMetricUrl = abfsConfiguration.getMetricUri();
-
+    // Initialize read thread pool metrics if ReadAheadV2 and its dynamic scaling feature are enabled.
+    if (abfsConfiguration.isReadAheadV2Enabled() && abfsConfiguration.isReadAheadV2DynamicScalingEnabled()) {
+      abfsCounters.initializeReadMetrics();
+    }
     final Class<? extends IdentityTransformerInterface> identityTransformerClass =
         abfsConfiguration.getRawConfiguration().getClass(FS_AZURE_IDENTITY_TRANSFORM_CLASS, IdentityTransformer.class,
             IdentityTransformerInterface.class);

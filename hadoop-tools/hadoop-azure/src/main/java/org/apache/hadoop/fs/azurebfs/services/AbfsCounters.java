@@ -83,5 +83,14 @@ public interface AbfsCounters extends IOStatisticsSource, DurationTrackerFactory
 
   AbfsReadFooterMetrics getAbfsReadFooterMetrics();
 
+  void initializeReadMetrics();
+
+  AbfsReadThreadPoolMetrics getAbfsReadThreadPoolMetrics();
+
+  void initializeWriteMetrics();
+
+  AbfsWriteThreadPoolMetrics getAbfsWriteThreadPoolMetrics();
+
   AtomicLong getLastExecutionTime();
+
 }
