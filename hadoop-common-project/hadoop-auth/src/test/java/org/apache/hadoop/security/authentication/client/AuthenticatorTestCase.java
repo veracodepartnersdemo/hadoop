@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.apache.hadoop.security.authentication.server.AuthenticationFilter;
+import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.http.HttpResponse;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -251,7 +252,7 @@ public class AuthenticatorTestCase {
       // Always do a GET before POST to trigger the SPNego negotiation
       if (doPost) {
         HttpPost post = new HttpPost(getBaseURL());
-        byte [] postBytes = POST.getBytes();
+        byte [] postBytes = DFSUtil.string2Bytes(POST);
         ByteArrayInputStream bis = new ByteArrayInputStream(postBytes);
         InputStreamEntity entity = new InputStreamEntity(bis, postBytes.length);
 
