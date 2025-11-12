@@ -489,6 +489,11 @@ public class TestRuntimeEstimators {
     }
 
     @Override
+    public String getResourceManagerHost() {
+      throw new UnsupportedOperationException("Not supported yet.");
+    }
+
+    @Override
     public int getTotalMaps() {
       return mapTasks.size();
     }
