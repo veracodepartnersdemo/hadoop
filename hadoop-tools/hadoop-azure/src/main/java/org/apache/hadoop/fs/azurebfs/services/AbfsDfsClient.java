@@ -171,7 +171,7 @@ public class AbfsDfsClient extends AbfsClient {
       final AccessTokenProvider tokenProvider,
       final EncryptionContextProvider encryptionContextProvider,
       final AbfsClientContext abfsClientContext) throws IOException {
-    super(baseUrl, sharedKeyCredentials, abfsConfiguration, tokenProvider,
+    super(baseUrl, sharedKeyCredentials, abfsConfiguration, tokenProvider, null,
         encryptionContextProvider, abfsClientContext, AbfsServiceType.DFS);
   }
 
@@ -192,7 +192,30 @@ public class AbfsDfsClient extends AbfsClient {
       final SASTokenProvider sasTokenProvider,
       final EncryptionContextProvider encryptionContextProvider,
       final AbfsClientContext abfsClientContext) throws IOException {
-    super(baseUrl, sharedKeyCredentials, abfsConfiguration, sasTokenProvider,
+    super(baseUrl, sharedKeyCredentials, abfsConfiguration, null, sasTokenProvider,
+        encryptionContextProvider, abfsClientContext, AbfsServiceType.DFS);
+  }
+
+  /**
+   * Creates an {@code AbfsDfsClient} instance.
+   *
+   * @param baseUrl the base URL of the DFS endpoint
+   * @param sharedKeyCredentials the shared key credentials
+   * @param abfsConfiguration the ABFS configuration
+   * @param tokenProvider the OAuth access token provider
+   * @param sasTokenProvider the SAS token provider
+   * @param encryptionContextProvider the encryption context provider
+   * @param abfsClientContext the ABFS client context
+   * @throws IOException if client initialization fails
+   */
+  public AbfsDfsClient(final URL baseUrl,
+      final SharedKeyCredentials sharedKeyCredentials,
+      final AbfsConfiguration abfsConfiguration,
+      final AccessTokenProvider tokenProvider,
+      final SASTokenProvider sasTokenProvider,
+      final EncryptionContextProvider encryptionContextProvider,
+      final AbfsClientContext abfsClientContext) throws IOException {
+    super(baseUrl, sharedKeyCredentials, abfsConfiguration, tokenProvider, sasTokenProvider,
         encryptionContextProvider, abfsClientContext, AbfsServiceType.DFS);
   }
 
