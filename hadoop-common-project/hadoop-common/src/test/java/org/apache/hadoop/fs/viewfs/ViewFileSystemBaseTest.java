@@ -1886,4 +1886,17 @@ abstract public class ViewFileSystemBaseTest {
           "Should get URISyntax Exception");
     }
   }
+
+  @Test
+  public void testGetURI() throws Exception {
+    // test that URIs without authority return the path component.
+    URI viewFsWithoutAuthority = URI.create("viewfs:///");
+    FileSystem fs = FileSystem.get(viewFsWithoutAuthority, conf);
+    assertEquals(viewFsWithoutAuthority, fs.getUri());
+
+    // test that URIs with authority do not return the path component.
+    URI viewFsWithAuthority = URI.create("viewfs://default");
+    fs = FileSystem.get(viewFsWithAuthority, conf);
+    assertEquals(viewFsWithAuthority, fs.getUri());
+  }
 }
