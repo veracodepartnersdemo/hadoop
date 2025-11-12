@@ -19,6 +19,7 @@
 package org.apache.hadoop.yarn.client;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -458,5 +459,30 @@ public class TestRMFailover extends ClientBaseWithFixes {
     testThread.join();
 
     verify(spyRTEHandler).uncaughtException(testThread, rte);
+  }
+
+  @Test
+  public void testTransitionedToStandbyWhenAutoFailover()
+      throws YarnException, InterruptedException, IOException {
+    conf.set(YarnConfiguration.RM_CLUSTER_ID, "yarn-test-cluster");
+    conf.set(YarnConfiguration.RM_ZK_ADDRESS, hostPort);
+    conf.setInt(YarnConfiguration.RM_ZK_TIMEOUT_MS, 2000);
+
+    cluster.init(conf);
+    cluster.start();
+
+    int activeRMIndex = cluster.getActiveRMIndex();
+    assertNotEquals(-1, activeRMIndex, "RM never turned active");
+    verifyConnections();
+
+    HAServiceProtocol.StateChangeRequestInfo requestInfo = new HAServiceProtocol.StateChangeRequestInfo(
+        HAServiceProtocol.RequestSource.REQUEST_BY_USER_FORCED);
+    // transit the active RM to standby.
+    getAdminService(activeRMIndex).transitionToStandby(requestInfo);
+    verifyRMTransitionToStandby(cluster.getResourceManager(activeRMIndex));
+    // the standby RM transition to active.
+    int newActiveRMIndex = (activeRMIndex + 1) % 2;
+    assertEquals(newActiveRMIndex, cluster.getActiveRMIndex(), "Failover failed");
+    verifyConnections();
   }
 }
