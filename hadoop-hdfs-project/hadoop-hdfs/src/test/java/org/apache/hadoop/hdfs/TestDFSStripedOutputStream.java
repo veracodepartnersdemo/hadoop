@@ -17,7 +17,9 @@
  */
 package org.apache.hadoop.hdfs;
 
+import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.DFS_CLIENT_EC_WRITE_ALLOW_END_BLOCKGROUP_INADVANCE;
 import static org.apache.hadoop.hdfs.client.HdfsClientConfigKeys.Write.RECOVER_LEASE_ON_CLOSE_EXCEPTION_KEY;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -28,10 +30,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 
 import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.hdfs.protocol.LocatedBlock;
+import org.apache.hadoop.hdfs.protocol.LocatedBlocks;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -96,6 +101,7 @@ public class TestDFSStripedOutputStream {
     conf.setBoolean(DFSConfigKeys.DFS_NAMENODE_REDUNDANCY_CONSIDERLOAD_KEY,
         false);
     conf.setInt(DFSConfigKeys.DFS_NAMENODE_REPLICATION_MAX_STREAMS_KEY, 0);
+    conf.setBoolean(DFS_CLIENT_EC_WRITE_ALLOW_END_BLOCKGROUP_INADVANCE, true);
     if (ErasureCodeNative.isNativeCodeLoaded()) {
       conf.set(
           CodecUtil.IO_ERASURECODE_CODEC_RS_RAWCODERS_KEY,
@@ -189,6 +195,32 @@ public class TestDFSStripedOutputStream {
         blockSize * dataBlocks * 3 + cellSize * dataBlocks
         + cellSize + 123);
   }
+
+  @Test
+  public void testEndBlockGroupInadvance() throws Exception {
+    DFSClientFaultInjector old = DFSClientFaultInjector.get();
+    String src = "/testEndBlockGroupInadvance";
+    Path testPath = new Path(src);
+    try {
+      DFSClientFaultInjector.set(new DFSClientFaultInjector() {
+        @Override
+        public boolean mockEndBlockGroupInAdvance() {
+          return true;
+        }
+      });
+      byte[] bytes = StripedFileTestUtil.generateBytes(2 * cellSize * dataBlocks + 123);
+      DFSTestUtil.writeFile(fs, testPath, new String(bytes));
+      StripedFileTestUtil.waitBlockGroupsReported(fs, src);
+      StripedFileTestUtil.verifyLength(fs, testPath, bytes.length);
+      List<List<LocatedBlock>> blockGroupList = new ArrayList<>();
+      LocatedBlocks lbs = fs.getClient().getLocatedBlocks(testPath.toString(), 0L,
+          Long.MAX_VALUE);
+      assertEquals(3, lbs.getLocatedBlocks().size());
+    } finally {
+      DFSClientFaultInjector.set(old);
+    }
+  }
+
 
   /**
    * {@link DFSStripedOutputStream} doesn't support hflush() or hsync() yet.
