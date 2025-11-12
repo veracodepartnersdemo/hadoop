@@ -722,11 +722,10 @@ public abstract class AbstractYarnScheduler
       if (allocatedContainers != null) {
         for (RMContainer rmContainer : allocatedContainers) {
           if (extraContainers > 0) {
-            // Change the state of the container from ALLOCATED to EXPIRED since it is not required.
+            // Change the state of the container from ALLOCATED to RELEASED
+            // since it is not required.
             LOG.debug("Removing extra container:{}", rmContainer.getContainer());
-            completedContainer(rmContainer, SchedulerUtils.createAbnormalContainerStatus(
-                rmContainer.getContainerId(), SchedulerUtils.EXPIRED_CONTAINER),
-                RMContainerEventType.EXPIRE);
+            asyncContainerRelease(rmContainer);
             application.newlyAllocatedContainers.remove(rmContainer);
             extraContainers--;
           }
@@ -770,10 +769,10 @@ public abstract class AbstractYarnScheduler
     }
 
     // when auto correct container allocation is enabled, there can be a case when extra containers
-    // go to expired state from allocated state. When such scenario happens do not re-attempt the
+    // go to released state from allocated state. When such scenario happens do not re-attempt the
     // container request since this is expected.
     if (autoCorrectContainerAllocation &&
-        RMContainerState.EXPIRED.equals(rmContainer.getState())) {
+        RMContainerState.RELEASED.equals(rmContainer.getState())) {
       return;
     }
 
