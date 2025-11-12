@@ -42,6 +42,7 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.glassfish.jersey.jettison.internal.entity.JettisonObjectProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -76,7 +77,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
-import org.glassfish.jersey.jettison.internal.entity.JettisonObjectProvider;
 
 public class TestRMHA {
   private static final Logger LOG = LoggerFactory.getLogger(TestRMHA.class);
@@ -162,9 +162,9 @@ public class TestRMHA {
   private void checkActiveRMWebServices() throws JSONException {
 
     // Validate web-service
-    Client webServiceClient = ClientBuilder.
-        newClient().
-        register(new JettisonObjectProvider.App());
+    Client webServiceClient = ClientBuilder
+        .newClient()
+        .register(new JettisonObjectProvider.App());
     InetSocketAddress rmWebappAddr =
         NetUtils.getConnectAddress(rm.getWebapp().getListenerAddress());
     String webappURL =
